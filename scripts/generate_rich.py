@@ -16,11 +16,39 @@ import generate_feed as gf
 
 rnd = gf.random
 VAT = gf.VAT
-VEHICLES = gf.VEHICLES
 UPDATED = gf.UPDATED
 
 
-# ── Reference data ─────────────────────────────────────────────────────────
+# ── Reference data (all ASCII, consistent format for cross-feed search) ─────
+# Structured vehicles: (make, model, generation, year_from, year_to).
+# Same spelling/format in every feed → searchable by make/model/generation.
+VEHICLES = [
+    ("Skoda", "Octavia", "II (1Z)", 2004, 2013),
+    ("Skoda", "Octavia", "III (5E)", 2013, 2020),
+    ("Skoda", "Fabia", "II (5J)", 2007, 2014),
+    ("Skoda", "Superb", "II (3T)", 2008, 2015),
+    ("Volkswagen", "Golf", "VI (5K)", 2008, 2013),
+    ("Volkswagen", "Golf", "VII", 2012, 2020),
+    ("Volkswagen", "Passat", "B7", 2010, 2014),
+    ("Volkswagen", "Passat", "B8", 2014, 2023),
+    ("Audi", "A4", "B8", 2007, 2015),
+    ("Audi", "A6", "C7", 2011, 2018),
+    ("BMW", "3 Series", "E90", 2005, 2012),
+    ("BMW", "5 Series", "F10", 2010, 2017),
+    ("Mercedes-Benz", "C-Class", "W204", 2007, 2014),
+    ("Mercedes-Benz", "E-Class", "W212", 2009, 2016),
+    ("Opel", "Astra", "J", 2009, 2015),
+    ("Opel", "Insignia", "A", 2008, 2017),
+    ("Ford", "Focus", "III", 2010, 2018),
+    ("Ford", "Mondeo", "IV", 2007, 2014),
+    ("Peugeot", "308", "II", 2013, 2021),
+    ("Renault", "Megane", "III", 2008, 2016),
+    ("Kia", "Ceed", "II (JD)", 2012, 2018),
+    ("Hyundai", "i30", "II (GD)", 2011, 2017),
+    ("Toyota", "Corolla", "E170", 2013, 2019),
+    ("Dacia", "Duster", "I", 2010, 2018),
+]
+
 ORIGIN = ["Germany", "Czechia", "Poland", "Italy", "France", "Spain",
           "Slovakia", "Turkey", "Japan", "China"]
 WAREHOUSE = ["BA-01 Bratislava", "ZA-02 Zilina", "KE-03 Kosice",
@@ -43,20 +71,6 @@ def price(lo, hi):
     return round(rnd.uniform(lo, hi), 2)
 
 
-def vehicle():
-    mk, gen = rnd.choice(VEHICLES)
-    return f"{mk} {gen}"
-
-
-def years_from_vehicle(v):
-    """Extracts 'year from–to' from the compatibility string (e.g. '2007-2013')."""
-    for tok in v.replace("–", "-").split():
-        if "-" in tok and tok[:4].isdigit():
-            a, _, b = tok.partition("-")
-            return a, (b if b.isdigit() else "")
-    return "", ""
-
-
 def avail():
     status = rnd.choices(["In stock", "Incoming", "On order", "Sold out"],
                          weights=[60, 12, 25, 3])[0]
@@ -64,8 +78,8 @@ def avail():
            "On order": 0, "Sold out": 0}[status]
     days = {"In stock": 1, "Incoming": 3, "On order": rnd.choice([7, 10, 14]),
             "Sold out": 0}[status]
-    txt = {"In stock": "24 h", "Incoming": "2–3 days",
-           "On order": f"{days} days", "Sold out": "—"}[status]
+    txt = {"In stock": "24 h", "Incoming": "2-3 days",
+           "On order": f"{days} days", "Sold out": ""}[status]
     return status, qty, txt, days
 
 
@@ -129,7 +143,7 @@ def oils():
         voc=voc, marza=(1.20, 1.45), zaruka=0, oe=False, kompat=False,
         hmot=round({1: 1.0, 4: 3.8, 5: 4.7, 20: 18.5}[bal], 1),
         dims=(rnd.randint(90, 300), rnd.randint(90, 300), rnd.randint(120, 400)),
-        objem=float(bal), jednotka="€/L", norma=f"ACEA {acea} / API {api}",
+        objem=float(bal), jednotka="EUR/L", norma=f"ACEA {acea} / API {api}",
         variant_typ="Viscosity/Pack", variant_val=f"{visk} / {bal} L",
         olej_visk=visk, olej_norma=f"ACEA {acea}, API {api}",
     )
@@ -140,18 +154,20 @@ def fluids():
         ("Coolant", ["Febi", "Liqui Moly", "Castrol"], 1.5, 6, 18, "G12++"),
         ("Brake fluid", ["ATE", "Bosch", "TRW"], 0.5, 5, 14, "DOT 4"),
         ("AdBlue", ["BASF", "Liqui Moly"], 10, 9, 22, "ISO 22241"),
-        ("Washer fluid", ["Sheron", "Liqui Moly"], 3, 3, 9, "—"),
+        ("Washer fluid", ["Sheron", "Liqui Moly"], 3, 3, 9, ""),
     ])
     b = rnd.choice(brands)
+    norm_txt = f"{norma} standard, " if norma else ""
     return dict(
         kat="Fluids", sub=sub, znacka=b, vyrobca=b,
-        nazov=f"{sub} {b} {vol} L", kratky=f"{sub} {b}, {vol} L, {norma}",
-        dlhy=f"{sub} {b}, {norma} standard, {vol} L pack. Ready to use, "
+        nazov=f"{sub} {b} {vol} L",
+        kratky=(f"{sub} {b}, {vol} L, {norma}" if norma else f"{sub} {b}, {vol} L"),
+        dlhy=f"{sub} {b}, {norm_txt}{vol} L pack. Ready to use, "
              f"compliant with vehicle manufacturer specifications.",
         voc=price(lo, hi), marza=(1.25, 1.50), zaruka=0, oe=False, kompat=False,
         hmot=round(vol * rnd.uniform(1.0, 1.1), 2),
         dims=(rnd.randint(90, 250), rnd.randint(90, 250), rnd.randint(150, 400)),
-        objem=float(vol), jednotka="€/L", norma=norma,
+        objem=float(vol), jednotka="EUR/L", norma=norma,
         variant_typ="Pack", variant_val=f"{vol} L",
     )
 
@@ -247,16 +263,18 @@ def accessories():
         ("Roof box", ["Thule", "Hapro"], 180, 520),
         ("Snow chains", ["Pewag", "Konig"], 35, 120),
     ])
-    b = rnd.choice(brands); color = rnd.choice(["Black", "Grey", "Beige", "—"])
+    b = rnd.choice(brands); color = rnd.choice(["Black", "Grey", "Beige", ""])
     return dict(
         kat="Accessories", sub=sub, znacka=b, vyrobca=b,
-        nazov=f"{sub} {b}", kratky=f"{sub} {b}, {color.lower()}",
+        nazov=f"{sub} {b}",
+        kratky=(f"{sub} {b}, {color.lower()}" if color else f"{sub} {b}"),
         dlhy=f"{sub} {b}. Quality build, easy installation, universal or "
              f"model-specific design.",
         voc=price(lo, hi), marza=(1.35, 1.70), zaruka=12, oe=False, kompat=False,
         hmot=round(rnd.uniform(0.1, 9.0), 2),
         dims=(rnd.randint(50, 600), rnd.randint(50, 400), rnd.randint(20, 300)),
-        farba=color, variant_typ="Design", variant_val=rnd.choice(["Universal", color, "Set"]),
+        farba=color, variant_typ="Design",
+        variant_val=rnd.choice(["Universal", "Set", color or "Standard"]),
     )
 
 
@@ -302,7 +320,8 @@ COLUMNS = [
     "min_order_qty", "order_multiple", "units_per_pack", "packaging_type", "dispatch_within",
     "net_weight_kg", "gross_weight_kg", "length_mm", "width_mm", "height_mm",
     "volume_l", "dimensions_text",
-    "vehicle_compatibility", "year_from", "year_to", "standard_certification",
+    "vehicle_make", "vehicle_model", "vehicle_generation", "vehicle_year_from",
+    "vehicle_year_to", "vehicle_compatibility", "standard_certification",
     "hs_customs_code", "country_of_origin", "condition", "warranty_months",
     "tire_season", "eu_label_fuel", "eu_label_grip", "eu_label_noise_db",
     "oil_viscosity", "oil_standard",
@@ -324,8 +343,12 @@ def build_record(i, supplier, sup_prefix):
     cena_jednotka = round(moc_dph / objem, 2) if objem else ""
     status, qty, dod_txt, dod_dni = avail()
     code = f"{sup_prefix}-{CAT_CODE.get(g['kat'], 'GEN')}-{i:06d}"
-    kompat = vehicle() if g["kompat"] else "Universal"
-    rok_od, rok_do = years_from_vehicle(kompat) if g["kompat"] else ("", "")
+    if g["kompat"]:
+        v_make, v_model, v_gen, v_yf, v_yt = rnd.choice(VEHICLES)
+        kompat = f"{v_make} {v_model} {v_gen} {v_yf}-{v_yt}"
+    else:
+        v_make = v_model = v_gen = v_yf = v_yt = ""
+        kompat = "Universal"
     l, w, h = g["dims"]
     n_oe = rnd.randint(1, 3) if g["oe"] else 0
     oe = ";".join(f"OE{rnd.randint(1000000, 9999999)}" for _ in range(n_oe))
@@ -352,7 +375,7 @@ def build_record(i, supplier, sup_prefix):
         "margin_pct": f"{marza_pct:.1f}", "discount_pct": rabat,
         "sale_price_incl_vat": (f"{akcia:.2f}" if akcia != "" else ""),
         "unit_price": (f"{cena_jednotka:.2f}" if cena_jednotka != "" else ""),
-        "price_unit": g.get("jednotka", "€/pc"),
+        "price_unit": g.get("jednotka", "EUR/pc"),
         "core_deposit": (f"{g['deposit']:.2f}" if g.get("deposit") else ""),
         "stock_qty": qty, "warehouse_location": rnd.choice(WAREHOUSE),
         "availability": status, "lead_time": dod_txt, "lead_time_days": dod_dni,
@@ -365,7 +388,9 @@ def build_record(i, supplier, sup_prefix):
         "length_mm": l, "width_mm": w, "height_mm": h,
         "volume_l": (f"{objem:.2f}" if objem else ""),
         "dimensions_text": f"{l}x{w}x{h} mm",
-        "vehicle_compatibility": kompat, "year_from": rok_od, "year_to": rok_do,
+        "vehicle_make": v_make, "vehicle_model": v_model, "vehicle_generation": v_gen,
+        "vehicle_year_from": v_yf, "vehicle_year_to": v_yt,
+        "vehicle_compatibility": kompat,
         "standard_certification": g.get("norma", ""),
         "hs_customs_code": HS_CODES.get(g["kat"], ""),
         "country_of_origin": rnd.choice(ORIGIN),
@@ -383,17 +408,17 @@ def build_record(i, supplier, sup_prefix):
 
 # ── 11 suppliers (name, prefix, seed, focus weights) ───────────────────────
 SUPPLIERS = [
-    ("MotoDiely SK s.r.o.",        "MDS", 42,  None),
-    ("AutoParts Slovakia s.r.o.",  "APS", 101, None),
-    ("BrzdyPro s.r.o.",            "BPR", 102, [40, 8, 22, 3, 3, 4, 2, 2, 6, 10]),
-    ("FilterCentrum s.r.o.",       "FLC", 103, [6, 42, 14, 8, 8, 3, 2, 3, 8, 6]),
-    ("OlejExpert s.r.o.",          "OLX", 104, [4, 8, 8, 38, 26, 2, 1, 3, 6, 4]),
-    ("PneuServis SK s.r.o.",       "PNS", 105, [4, 4, 6, 4, 3, 42, 24, 3, 6, 4]),
-    ("ElektroAuto s.r.o.",         "ELA", 106, [6, 6, 10, 4, 4, 4, 2, 30, 8, 26]),
-    ("DielyExpres s.r.o.",         "DEX", 107, [16, 12, 40, 6, 5, 5, 3, 4, 5, 4]),
-    ("CarStyle s.r.o.",            "CST", 108, [4, 6, 8, 5, 5, 8, 6, 3, 45, 10]),
-    ("EuroDiely a.s.",             "EUD", 109, None),
-    ("MotoMarket s.r.o.",          "MMK", 110, None),
+    ("MotoParts SK Ltd.",        "MDS", 42,  None),
+    ("AutoParts Slovakia Ltd.",  "APS", 101, None),
+    ("BrakePro Ltd.",            "BPR", 102, [40, 8, 22, 3, 3, 4, 2, 2, 6, 10]),
+    ("FilterCentre Ltd.",        "FLC", 103, [6, 42, 14, 8, 8, 3, 2, 3, 8, 6]),
+    ("OilExpert Ltd.",           "OLX", 104, [4, 8, 8, 38, 26, 2, 1, 3, 6, 4]),
+    ("TyreService SK Ltd.",      "PNS", 105, [4, 4, 6, 4, 3, 42, 24, 3, 6, 4]),
+    ("ElectroAuto Ltd.",         "ELA", 106, [6, 6, 10, 4, 4, 4, 2, 30, 8, 26]),
+    ("PartsExpress Ltd.",        "DEX", 107, [16, 12, 40, 6, 5, 5, 3, 4, 5, 4]),
+    ("CarStyle Ltd.",            "CST", 108, [4, 6, 8, 5, 5, 8, 6, 3, 45, 10]),
+    ("EuroParts Plc.",           "EUD", 109, None),
+    ("MotoMarket Ltd.",          "MMK", 110, None),
 ]
 
 

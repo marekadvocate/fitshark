@@ -13,34 +13,50 @@ They serve as input data for an agent that processes product feeds from Google S
 ### Parameters
 
 - **11 feeds × 10,000 SKU** (1 row = 1 SKU/variant)
-- **67 columns** per product
+- **70 columns** per product
 - Market SK, currency EUR, VAT 23%
 - **TSV (TAB-separated)** format — ready for direct paste into Google Sheets
-- All headers and content in English
+- All content **100% ASCII English** — no diacritics, consistent formatting for easy cross-feed search
 
 ### Feed list
 
 | File | Supplier | Focus |
 |---|---|---|
-| `feed_mds.tsv` | MotoDiely SK s.r.o. | full range |
-| `feed_aps.tsv` | AutoParts Slovakia s.r.o. | full range |
-| `feed_bpr.tsv` | BrzdyPro s.r.o. | brakes |
-| `feed_flc.tsv` | FilterCentrum s.r.o. | filters |
-| `feed_olx.tsv` | OlejExpert s.r.o. | oils / fluids |
-| `feed_pns.tsv` | PneuServis SK s.r.o. | tires + wheels |
-| `feed_ela.tsv` | ElektroAuto s.r.o. | batteries + lighting |
-| `feed_dex.tsv` | DielyExpres s.r.o. | spare parts |
-| `feed_cst.tsv` | CarStyle s.r.o. | accessories |
-| `feed_eud.tsv` | EuroDiely a.s. | full range |
-| `feed_mmk.tsv` | MotoMarket s.r.o. | full range |
+| `feed_mds.tsv` | MotoParts SK Ltd. | full range |
+| `feed_aps.tsv` | AutoParts Slovakia Ltd. | full range |
+| `feed_bpr.tsv` | BrakePro Ltd. | brakes |
+| `feed_flc.tsv` | FilterCentre Ltd. | filters |
+| `feed_olx.tsv` | OilExpert Ltd. | oils / fluids |
+| `feed_pns.tsv` | TyreService SK Ltd. | tires + wheels |
+| `feed_ela.tsv` | ElectroAuto Ltd. | batteries + lighting |
+| `feed_dex.tsv` | PartsExpress Ltd. | spare parts |
+| `feed_cst.tsv` | CarStyle Ltd. | accessories |
+| `feed_eud.tsv` | EuroParts Plc. | full range |
+| `feed_mmk.tsv` | MotoMarket Ltd. | full range |
 
-### Parameter groups (67 columns)
+### Vehicle data (consistent, searchable across all feeds)
+
+Vehicle fitment is split into structured columns using the **same spelling and format in every feed**, so
+you can filter/search across all of them:
+
+| Column | Example |
+|---|---|
+| `vehicle_make` | `BMW` |
+| `vehicle_model` | `5 Series` |
+| `vehicle_generation` | `F10` |
+| `vehicle_year_from` / `vehicle_year_to` | `2010` / `2017` |
+| `vehicle_compatibility` | `BMW 5 Series F10 2010-2017` (canonical combined string) |
+
+13 makes, 24 model+generation combinations. Universal products have empty vehicle fields and
+`vehicle_compatibility = Universal`.
+
+### Parameter groups (70 columns)
 
 Identity (sku, EAN, MPN, OE numbers, TecDoc) · brand/classification · text (name, short/long description) ·
 variants (type, value, fitment position, side, color) · pricing (wholesale/retail excl. & incl. VAT, margin %,
 discount, sale price, unit price, core deposit) · stock & logistics · physical dimensions and weight ·
-automotive (vehicle compatibility, production years, standards, HS customs code, country of origin,
-condition new/remanufactured) · tire EU label · oil standards · media and meta.
+structured vehicle fitment (make, model, generation, years) · automotive (standards, HS customs code,
+country of origin, condition new/remanufactured) · tire EU label · oil standards · media and meta.
 
 ## Paste into Google Sheets
 
