@@ -1,65 +1,66 @@
 # fitshark
 
-Testovacie dátové feedy automobilového sortimentu pre vývoj a testovanie agentov.
+Test automotive product feeds for developing and testing feed-ingestion agents.
 
-## Prehľad
+## Overview
 
-`feeds/` obsahuje **11 syntetických dodávateľských feedov**, každý od iného (fiktívneho) dodávateľa.
-Slúžia ako vstupné dáta pre agenta, ktorý spracúva produktové feedy z Google Sheets.
+`feeds/` contains **11 synthetic supplier feeds**, each from a different (fictional) supplier.
+They serve as input data for an agent that processes product feeds from Google Sheets.
 
-> ⚠️ Všetky dáta sú **vygenerované / syntetické** — fiktívni dodávatelia, náhodné kódy, EAN aj ceny.
-> Značky výrobcov (Bosch, Brembo, Mann-Filter…) a modely vozidiel sú reálne len pre realistickosť feedu.
+> ⚠️ All data is **generated / synthetic** — fictional suppliers, random codes, EANs and prices.
+> Manufacturer brands (Bosch, Brembo, Mann-Filter…) and vehicle models are real only for feed realism.
 
-### Parametre
+### Parameters
 
-- **11 feedov × 10 000 SKU** (1 riadok = 1 SKU/variant)
-- **67 stĺpcov** na produkt
-- Trh SK, mena EUR, DPH 23 %
-- Formát **TSV (TAB-oddeľované)** — pripravené na priame vloženie do Google Sheets
+- **11 feeds × 10,000 SKU** (1 row = 1 SKU/variant)
+- **67 columns** per product
+- Market SK, currency EUR, VAT 23%
+- **TSV (TAB-separated)** format — ready for direct paste into Google Sheets
+- All headers and content in English
 
-### Zoznam feedov
+### Feed list
 
-| Súbor | Dodávateľ | Zameranie |
+| File | Supplier | Focus |
 |---|---|---|
-| `feed_mds.tsv` | MotoDiely SK s.r.o. | plný sortiment |
-| `feed_aps.tsv` | AutoParts Slovakia s.r.o. | plný sortiment |
-| `feed_bpr.tsv` | BrzdyPro s.r.o. | brzdy |
-| `feed_flc.tsv` | FilterCentrum s.r.o. | filtre |
-| `feed_olx.tsv` | OlejExpert s.r.o. | oleje / kvapaliny |
-| `feed_pns.tsv` | PneuServis SK s.r.o. | pneumatiky + disky |
-| `feed_ela.tsv` | ElektroAuto s.r.o. | batérie + osvetlenie |
-| `feed_dex.tsv` | DielyExpres s.r.o. | náhradné diely |
-| `feed_cst.tsv` | CarStyle s.r.o. | autodoplnky |
-| `feed_eud.tsv` | EuroDiely a.s. | plný sortiment |
-| `feed_mmk.tsv` | MotoMarket s.r.o. | plný sortiment |
+| `feed_mds.tsv` | MotoDiely SK s.r.o. | full range |
+| `feed_aps.tsv` | AutoParts Slovakia s.r.o. | full range |
+| `feed_bpr.tsv` | BrzdyPro s.r.o. | brakes |
+| `feed_flc.tsv` | FilterCentrum s.r.o. | filters |
+| `feed_olx.tsv` | OlejExpert s.r.o. | oils / fluids |
+| `feed_pns.tsv` | PneuServis SK s.r.o. | tires + wheels |
+| `feed_ela.tsv` | ElektroAuto s.r.o. | batteries + lighting |
+| `feed_dex.tsv` | DielyExpres s.r.o. | spare parts |
+| `feed_cst.tsv` | CarStyle s.r.o. | accessories |
+| `feed_eud.tsv` | EuroDiely a.s. | full range |
+| `feed_mmk.tsv` | MotoMarket s.r.o. | full range |
 
-### Skupiny parametrov (67 stĺpcov)
+### Parameter groups (67 columns)
 
-Identita (kód, EAN, MPN, OE čísla, TecDoc) · značka/zaradenie · texty (názov, krátky/dlhý popis) ·
-varianty (typ, hodnota, pozícia montáže, strana, farba) · ceny (VOC/MOC bez aj s DPH, marža %, rabat,
-akciová cena, cena za jednotku, záloha za repas. diel) · sklad a logistika · fyzické rozmery a hmotnosť ·
-automotive (kompatibilita vozidla, roky výroby, normy, HS colný kód, krajina pôvodu, stav nový/repas) ·
-EÚ štítok pneumatík · normy olejov · médiá a meta.
+Identity (sku, EAN, MPN, OE numbers, TecDoc) · brand/classification · text (name, short/long description) ·
+variants (type, value, fitment position, side, color) · pricing (wholesale/retail excl. & incl. VAT, margin %,
+discount, sale price, unit price, core deposit) · stock & logistics · physical dimensions and weight ·
+automotive (vehicle compatibility, production years, standards, HS customs code, country of origin,
+condition new/remanufactured) · tire EU label · oil standards · media and meta.
 
-## Vloženie do Google Sheets
+## Paste into Google Sheets
 
-1. Otvor `feeds/feed_<prefix>.tsv` → **Cmd/Ctrl+A → Cmd/Ctrl+C**
-2. V Google Sheets klikni na bunku **A1** → **Cmd/Ctrl+V**
-3. TAB-oddeľovač sa automaticky rozhodí do 67 stĺpcov.
+1. Open `feeds/feed_<prefix>.tsv` → **Cmd/Ctrl+A → Cmd/Ctrl+C**
+2. In Google Sheets click cell **A1** → **Cmd/Ctrl+V**
+3. The TAB separator auto-splits into 67 columns.
 
-Ak sa čísla zobrazia ako text: *Súbor → Nastavenia → Miestne nastavenie* (feedy majú desatinnú bodku, ISO dátum).
+If numbers show as text: *File → Settings → Locale* (feeds use a dot decimal separator, ISO date).
 
-## Generovanie
+## Generating
 
-`scripts/` obsahuje generátory (Python 3, bez závislostí):
+`scripts/` contains the generators (Python 3, no dependencies):
 
 ```bash
 cd scripts
-python3 generate_rich.py   # aktuálne: 11 feedov × 67 parametrov (TSV)
+python3 generate_rich.py   # current: 11 feeds × 67 parameters (TSV)
 ```
 
-- `generate_rich.py` — aktuálny generátor (67-stĺpcový TSV)
-- `generate_feed.py` — pôvodné jadro generátorov kategórií
-- `generate_varied.py` — variant s heterogénnymi schémami (SK/EN/CZ/DE, rôzne oddeľovače) na test normalizácie
+- `generate_rich.py` — current generator (67-column English TSV)
+- `generate_feed.py` — original category-generator core
+- `generate_varied.py` — heterogeneous-schema variant (mixed languages/delimiters) for normalization testing
 
-Generovanie je deterministické (pevný seed na dodávateľa) — opakované spustenie dá identické feedy.
+Generation is deterministic (fixed per-supplier seed) — re-running produces identical feeds.
