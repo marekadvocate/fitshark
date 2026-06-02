@@ -1,6 +1,7 @@
 import React from "react";
 import {
   AbsoluteFill,
+  Easing,
   Img,
   interpolate,
   spring,
@@ -38,7 +39,7 @@ export const FadeUp: React.FC<{
 }> = ({ delay = 0, y = 22, children, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const p = spring({ frame: frame - delay, fps, durationInFrames: 16, config: { damping: 200 } });
+  const p = spring({ frame: frame - delay, fps, durationInFrames: 10, config: { damping: 200 } });
   return (
     <div
       style={{
@@ -77,6 +78,23 @@ export const fadeOut = (frame: number, total: number, dur = 14) =>
 export const Logo: React.FC<{ size?: number }> = ({ size = 220 }) => (
   <Img src={staticFile("logo.png")} style={{ width: size, height: size, objectFit: "contain" }} />
 );
+
+/** Count up to `to` over `dur` frames starting at `delay`, with comma formatting. */
+export const CountUp: React.FC<{ to: number; delay?: number; dur?: number; style?: React.CSSProperties }> = ({
+  to,
+  delay = 0,
+  dur = 28,
+  style,
+}) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame - delay, [0, dur], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+  const v = Math.round(p * to);
+  return <span style={style}>{v.toLocaleString("en-US")}</span>;
+};
 
 export const Kicker: React.FC<{ children: React.ReactNode; color?: string }> = ({
   children,
