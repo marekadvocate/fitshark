@@ -73,16 +73,56 @@ approvals appear in the Activity Inbox at once and you approve them independentl
 
 ## 3. Skills (reusable knowledge packs, attached to the agents)
 
-| Skill | Purpose |
-|-------|---------|
-| **fitshark-brand-voice** | The Fitshark voice, formatting, glossary, and trust/**fitment-guarantee** standards applied to every customer message. |
-| **fitshark-reply-writer** | Composes the polished reply (Subject + plain-text + HTML), price/delivery box, CTA, sign-off. |
-| **fitshark-product-link** | Builds the product-page link **and a unique per-customer order link** (`…/order/<question_id>-<sku>?email=…`). |
-| **fitshark-upsell-recommender** | Suggests 1–3 genuinely relevant, vehicle-compatible add-ons (+ optional premium upgrade) — raises order value. |
-| **fitshark-quote-pdf** | Generates a branded **PDF price quote** (line items, totals, validity) and attaches it; falls back to inline if PDF isn't available. |
-| **fitshark-offer-personalizer** | (Campaign) Turns a saved vehicle into a seasonal, vehicle-specific offer for later re-engagement. |
+Each skill is a reusable knowledge pack (a `SKILL.md`) under `duvo/skills/`. Skills are attached to a
+build **by skill ID** (attaching by name silently fails with "Unknown skill"). Definitions:
 
-Skills are attached to a build **by skill ID** (attaching by name silently fails with "Unknown skill").
+### `fitshark-brand-voice`
+The single source of truth for HOW Fitshark talks. Defines tone (professional, warm, concise),
+formatting standards (greeting, price/delivery as a labelled list, one primary CTA, sign-off
+"Fitshark Customer Care"), the glossary ("available on order", "incl. VAT", …), the **fitment-guarantee**
+line ("✓ Confirmed to fit your <vehicle> — or we'll make it right"), and the hard don'ts (never expose
+supplier names / SKU codes / wholesale prices / margins; never overpromise). Every other customer-facing
+skill (reply-writer, quote-pdf, offer-personalizer) follows it, so all touchpoints stay consistent.
+**Used by:** Consumer, Campaign.
+
+### `fitshark-reply-writer`
+Composes the customer reply itself.
+- **In:** customer_question, matched product (name, brand, variant, vehicle, availability, price incl.
+  VAT, currency, lead_time, image_url), ORDER_LINK + PRODUCT_LINK, today's date, optional upsell items.
+- **Out:** `SUBJECT`, a plain-text `BODY`, and a branded **HTML** `BODY` (a ~600px FITSHARK card:
+  product image, status badge, price/delivery box, "Order this part" button, optional "You might also
+  need" block, footer). Opens with the reassuring "even though it isn't in stock, we've been able to
+  secure it for you" framing, **written in the customer's own language** (EN/SK/CZ/DE/…).
+- **Send rule:** the HTML body is sent with `isHtml: true` so it renders as the branded email.
+**Used by:** Consumer, Campaign.
+
+### `fitshark-product-link`
+Builds, deterministically from the SKU, two URLs: (1) the **product page** `…/p/<sku-slug>` and (2) a
+**unique per-customer order link** `…/order/<question_id>-<sku-slug>?email=<urlencoded>&utm_…`. The order
+reference (`<question_id>-<sku>`) is unique to that customer + product, so the link opens a pre-filled
+order. Returns empty + a signal if the SKU is missing (never fabricates one). **Used by:** Consumer, Campaign.
+
+### `fitshark-upsell-recommender`
+Given the matched product + the customer's vehicle, proposes **1–3 genuinely relevant** companion parts
+(category cross-sell map: bulb→pair/wipers, battery→terminals/charger, brakes→discs/fluid, …) and at most
+one premium **trade-up**. Every suggestion must fit the same vehicle (or be Universal) and have a real
+catalog price; returns "(none)" rather than padding. Raises average order value without being pushy.
+**Used by:** Consumer (and Campaign for enrichment). *(In the queue build the producer pre-selects the
+upsell items and the consumer renders them.)*
+
+### `fitshark-quote-pdf`
+Generates a one-page branded **PDF price quote** (FITSHARK header, quote ref = question_id, bill-to,
+line-item table with Qty / unit price incl. VAT / line total, grand total, valid-until date, order link)
+in the sandbox via Python, and attaches it to the email. Prices must match the matched catalog row.
+Degrades gracefully: if no PDF library/attachment is available it falls back to an inline quote and
+**never blocks the send**. **Used by:** Consumer.
+
+### `fitshark-offer-personalizer`
+The campaign brain. Given a saved customer + vehicle (from the Customer Vehicles sheet) and the current
+season, it picks **2–4 fitting, well-timed parts** to offer next (seasonal logic — winter→battery/tyres,
+plus service items due by vehicle age), avoids re-offering the last item, respects opt-out, and returns a
+themed offer with rationale. Powers the later "we have something for your car" re-engagement campaigns.
+**Used by:** Campaign.
 
 ---
 

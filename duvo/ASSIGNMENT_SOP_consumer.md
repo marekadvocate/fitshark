@@ -41,14 +41,20 @@ Work only on this case. Use the pre-matched product as-is — do NOT re-search a
    d. Add the brand-voice fitment line when matched.vehicle_compatibility names a real vehicle.
    e. Build a branded quote with fitshark-quote-pdf (matched item + upsell lines) and produce the PDF.
 
-3. HUMAN APPROVAL (this case's own approval): title
-   "Reply <question_id> -> <product_name> (<price_incl_vat> <currency>, <lead_time>)"; description = full
-   draft (To, Subject, Body) + matched details + detected language.
+3. REQUEST APPROVAL — THEN STOP AND WAIT. Call request_approval with title
+   "Reply <question_id> -> <product_name> (<price_incl_vat> <currency>, <lead_time>)" and description = the
+   full draft (To, Subject, Body) + matched details + detected language.
+   ⚠️ request_approval is ASYNCHRONOUS / NON-BLOCKING: it only SUBMITS the request and replies
+   "you will be re-invoked when the human responds." The moment you have called it you MUST **STOP** —
+   end your turn and call NO further tools. Do NOT call send_email. Do NOT complete the case. Do NOT
+   assume approval. The job pauses until the human decides in the Activity Inbox and then RE-INVOKES you.
+   Sending (or completing) in the same turn as request_approval is a CRITICAL error.
 
-4. APPROVED → send via Gmail by calling send_email with: to=[customer_email], subject, body=the FULL
-   HTML Body, **isHtml: true** (MANDATORY — without it the email shows as raw/plain text), and
-   attachments=[the PDF quote] if generated. Never put the plain-text version in `body`.
-   DENIED → append a Responses Log row status "Rejected" + reason; FAIL the case; do not send.
+4. ONLY after the job is RESUMED with the human's decision:
+   - If APPROVED → send via Gmail by calling send_email with: to=[customer_email], subject, body=the FULL
+     HTML Body, **isHtml: true** (MANDATORY — without it the email shows as raw/plain text), and
+     attachments=[the PDF quote] if generated. Never put the plain-text version in `body`.
+   - If DENIED → append a Responses Log row status "Rejected" + reason; FAIL the case; do not send.
 
 5. After a successful send:
    - Append a Responses Log row: timestamp, question_id, customer_email, status "Sent", matched_sku,
@@ -64,6 +70,9 @@ Work only on this case. Use the pre-matched product as-is — do NOT re-search a
 # RULES
 - One case per run; never touch other cases. Resolve every case explicitly.
 - The email is sent ONLY after explicit human approval. Never auto-send. Always `isHtml: true` with the HTML body.
+- request_approval is asynchronous: after you call it you MUST stop and wait to be re-invoked. NEVER call
+  send_email or complete the case in the same turn as request_approval. Sending before the human approves
+  is a critical failure — the whole point is that a person reviews each email first.
 - Use price incl. VAT, currency, lead time exactly as in `matched` — never invent or recompute them.
 - Reply in the customer's language. Never expose internal data (supplier names, SKU codes, wholesale
   prices, margins). Do NOT search feeds — trust the pre-matched data.
