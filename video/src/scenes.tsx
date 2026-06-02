@@ -1,10 +1,16 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { BODY, C, HEAD } from "./theme";
-import { Body, FadeUp, fadeOut, H1, Kicker, Logo, PopIn, Stage } from "./ui";
+import { Body, FadeUp, fadeOut, H1, Logo, PopIn, Stage } from "./ui";
 
 type P = { len: number };
-const NIGHT = "#0f2545";
+const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+
+const Tag: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span style={{ fontFamily: MONO, fontSize: 24, color: "#7a4a36", background: "#f3e3da", padding: "8px 16px", borderRadius: 9 }}>
+    {children}
+  </span>
+);
 
 /* 1 — OPEN */
 export const S1: React.FC<P> = ({ len }) => {
@@ -30,9 +36,7 @@ export const S2: React.FC<P> = ({ len }) => {
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center" }}>
-        <FadeUp delay={3}>
-          <H1 size={120}>“Will this fit my car?”</H1>
-        </FadeUp>
+        <FadeUp delay={3}><H1 size={120}>“Will this fit my car?”</H1></FadeUp>
       </div>
     </Stage>
   );
@@ -44,12 +48,8 @@ export const S3: React.FC<P> = ({ len }) => {
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center" }}>
-        <FadeUp delay={3}>
-          <H1 size={86}>Answered in a day.</H1>
-        </FadeUp>
-        <FadeUp delay={16} style={{ marginTop: 10 }}>
-          <H1 size={86} style={{ color: C.blue }}>Or never.</H1>
-        </FadeUp>
+        <FadeUp delay={3}><H1 size={86}>Answered in a day.</H1></FadeUp>
+        <FadeUp delay={16} style={{ marginTop: 10 }}><H1 size={86} style={{ color: C.clay }}>Or never.</H1></FadeUp>
       </div>
     </Stage>
   );
@@ -61,44 +61,63 @@ export const S4: React.FC<P> = ({ len }) => {
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center", width: "100%" }}>
-        <PopIn delay={1} style={{ display: "flex", justifyContent: "center" }}>
-          <Logo size={300} />
-        </PopIn>
-        <FadeUp delay={18} style={{ marginTop: 4 }}>
-          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 130, color: C.blue, letterSpacing: -3 }}>Fitshark</div>
+        <PopIn delay={1} style={{ display: "flex", justifyContent: "center" }}><Logo size={300} /></PopIn>
+        <FadeUp delay={18} style={{ marginTop: 8 }}>
+          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 130, color: C.clay, letterSpacing: -3 }}>Fitshark</div>
         </FadeUp>
       </div>
     </Stage>
   );
 };
 
-/* 5 — UNDERSTANDS */
+/* 5 — TECH GLIMPSE (early, light) */
+export const STech: React.FC<P> = ({ len }) => {
+  const f = useCurrentFrame();
+  return (
+    <Stage>
+      <div style={{ opacity: fadeOut(f, len), textAlign: "center", width: "100%", maxWidth: 1600 }}>
+        <FadeUp delay={2}>
+          <Body size={30} style={{ color: C.gray, fontFamily: HEAD, letterSpacing: 2, textTransform: "uppercase" }}>
+            An agentic pipeline on Duvo
+          </Body>
+        </FadeUp>
+        <FadeUp delay={16} style={{ marginTop: 30, display: "flex", gap: 14, alignItems: "center", justifyContent: "center", flexWrap: "wrap" }}>
+          {["customer question", "Case Queue", "parallel agents", "human-approved", "sent + ordered"].map((s, i) => (
+            <React.Fragment key={s}>
+              <Tag>{s}</Tag>
+              {i < 4 && <span style={{ color: C.clay, fontFamily: HEAD, fontSize: 28 }}>→</span>}
+            </React.Fragment>
+          ))}
+        </FadeUp>
+        <FadeUp delay={70} style={{ marginTop: 30 }}>
+          <Body size={32}>110,000 parts · 11 suppliers · grounded in real data.</Body>
+        </FadeUp>
+      </div>
+    </Stage>
+  );
+};
+
+/* 6 — UNDERSTANDS */
 export const S5: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center", maxWidth: 1500 }}>
-        <FadeUp delay={3}>
-          <H1 size={88}>It gets what they mean.</H1>
-        </FadeUp>
-        <FadeUp delay={18} style={{ marginTop: 18 }}>
-          <Body size={44} style={{ color: C.gray }}>Even what they don&apos;t say.</Body>
-        </FadeUp>
+        <FadeUp delay={3}><H1 size={88}>It gets what they mean.</H1></FadeUp>
+        <FadeUp delay={18} style={{ marginTop: 18 }}><Body size={44} style={{ color: C.gray }}>Even what they don&apos;t say.</Body></FadeUp>
       </div>
     </Stage>
   );
 };
 
-/* 6 — THE MARKET (big number) */
+/* 7 — THE MARKET */
 export const S6: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center", width: "100%" }}>
         <PopIn delay={2}>
-          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 200, color: C.blue, letterSpacing: -4, lineHeight: 1 }}>
-            110,000
-          </div>
+          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 200, color: C.clay, letterSpacing: -4, lineHeight: 1 }}>110,000</div>
         </PopIn>
         <FadeUp delay={18} style={{ marginTop: 8 }}>
           <H1 size={56}>parts. Every supplier. <span style={{ color: C.gray }}>One best answer.</span></H1>
@@ -108,53 +127,43 @@ export const S6: React.FC<P> = ({ len }) => {
   );
 };
 
-/* 7 — THE WOW (dark, out-of-stock) */
+/* 8 — THE WOW (Anthropic dark) */
 export const S7: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
-    <AbsoluteFill style={{ background: NIGHT, justifyContent: "center", alignItems: "center", padding: "0 150px" }}>
+    <AbsoluteFill style={{ background: C.dark, justifyContent: "center", alignItems: "center", padding: "0 150px" }}>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center", maxWidth: 1550 }}>
-        <FadeUp delay={3}>
-          <div style={{ fontFamily: HEAD, fontWeight: 600, fontSize: 44, color: "#9fb6d8" }}>Out of stock?</div>
-        </FadeUp>
+        <FadeUp delay={3}><div style={{ fontFamily: HEAD, fontWeight: 600, fontSize: 44, color: C.gray }}>Out of stock?</div></FadeUp>
         <FadeUp delay={16} style={{ marginTop: 18 }}>
-          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 110, color: "#fff", letterSpacing: -2, lineHeight: 1.05 }}>
-            It orders it <span style={{ color: C.gold }}>anyway.</span>
+          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 110, color: C.cream, letterSpacing: -2, lineHeight: 1.05 }}>
+            It orders it <span style={{ color: C.clay }}>anyway.</span>
           </div>
         </FadeUp>
         <FadeUp delay={40} style={{ marginTop: 26 }}>
-          <div style={{ fontFamily: BODY, fontSize: 38, color: "#c7d4e8" }}>
-            Sources the part, places the order — turns a dead end into a sale.
-          </div>
+          <div style={{ fontFamily: BODY, fontSize: 38, color: "#cdcabf" }}>Sources the part, places the order — turns a dead end into a sale.</div>
         </FadeUp>
       </div>
     </AbsoluteFill>
   );
 };
 
-/* 8 — THE REPLY (hero) */
+/* 9 — THE REPLY (hero) */
 export const S8: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), display: "flex", gap: 80, alignItems: "center", width: "100%" }}>
         <div style={{ flex: 1 }}>
-          <FadeUp delay={3}>
-            <H1 size={70}>A flawless reply.</H1>
-          </FadeUp>
+          <FadeUp delay={3}><H1 size={70}>A flawless reply.</H1></FadeUp>
           <FadeUp delay={18} style={{ marginTop: 18 }}>
-            <Body size={40} style={{ color: "#3c3a36" }}>
-              Their language. A price, a date, and <span style={{ color: C.blue }}>one tap to buy.</span>
-            </Body>
+            <Body size={40}>Their language. A price, a date, and <span style={{ color: C.clay }}>one tap to buy.</span></Body>
           </FadeUp>
-          <FadeUp delay={40} style={{ marginTop: 22 }}>
-            <Body size={30} style={{ color: C.green }}>In seconds.</Body>
-          </FadeUp>
+          <FadeUp delay={40} style={{ marginTop: 22 }}><Body size={30} style={{ color: C.green }}>In seconds.</Body></FadeUp>
         </div>
         <PopIn delay={10} style={{ flexShrink: 0 }}>
           <div style={{ width: 560, background: "#fff", borderRadius: 20, border: `1px solid ${C.lightGray}`, overflow: "hidden", boxShadow: "0 34px 64px rgba(20,20,19,0.12)" }}>
-            <div style={{ background: C.blue, padding: "16px 26px", fontFamily: HEAD, fontWeight: 700, fontSize: 26, color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>Fitshark</span><span style={{ fontFamily: HEAD, fontSize: 15, background: C.gold, color: "#3a2c06", padding: "3px 12px", borderRadius: 20 }}>ON ORDER</span>
+            <div style={{ background: C.clay, padding: "16px 26px", fontFamily: HEAD, fontWeight: 700, fontSize: 26, color: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>Fitshark</span><span style={{ fontFamily: HEAD, fontSize: 15, background: "#fff", color: C.clay, padding: "3px 12px", borderRadius: 20 }}>ON ORDER</span>
             </div>
             <div style={{ padding: 30 }}>
               <div style={{ fontFamily: HEAD, fontWeight: 600, fontSize: 25, color: C.dark }}>Vaša H7 žiarovka Philips — objednáme pre vás</div>
@@ -162,7 +171,7 @@ export const S8: React.FC<P> = ({ len }) => {
                 <div><b>Cena:</b> 17,81 € s DPH</div>
                 <div><b>Dodanie:</b> na objednávku · 7 dní</div>
               </div>
-              <div style={{ marginTop: 20, background: C.blue, color: "#fff", fontFamily: HEAD, fontWeight: 600, fontSize: 23, textAlign: "center", padding: "15px 0", borderRadius: 12 }}>Objednať →</div>
+              <div style={{ marginTop: 20, background: C.clay, color: "#fff", fontFamily: HEAD, fontWeight: 600, fontSize: 23, textAlign: "center", padding: "15px 0", borderRadius: 12 }}>Objednať →</div>
             </div>
           </div>
         </PopIn>
@@ -171,55 +180,43 @@ export const S8: React.FC<P> = ({ len }) => {
   );
 };
 
-/* 9 — HUMAN */
+/* 10 — HUMAN */
 export const S9: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center" }}>
-        <FadeUp delay={3}>
-          <H1 size={96}>You approve. <span style={{ color: C.blue }}>It sends.</span></H1>
-        </FadeUp>
+        <FadeUp delay={3}><H1 size={96}>You approve. <span style={{ color: C.clay }}>It sends.</span></H1></FadeUp>
       </div>
     </Stage>
   );
 };
 
-/* 10 — PAYOFF */
+/* 11 — PAYOFF */
 export const S10: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len), textAlign: "center", maxWidth: 1500 }}>
-        <FadeUp delay={3}>
-          <H1 size={94}>Browsers become <span style={{ color: C.gold }}>buyers.</span></H1>
-        </FadeUp>
-        <FadeUp delay={18} style={{ marginTop: 18 }}>
-          <Body size={42} style={{ color: C.gray }}>Automatically. Around the clock.</Body>
-        </FadeUp>
+        <FadeUp delay={3}><H1 size={94}>Browsers become <span style={{ color: C.clay }}>buyers.</span></H1></FadeUp>
+        <FadeUp delay={18} style={{ marginTop: 18 }}><Body size={42} style={{ color: C.gray }}>Automatically. Around the clock.</Body></FadeUp>
       </div>
     </Stage>
   );
 };
 
-/* 11 — CLOSE */
+/* 12 — CLOSE */
 export const S11: React.FC<P> = ({ len }) => {
   const f = useCurrentFrame();
   return (
     <Stage>
       <div style={{ opacity: fadeOut(f, len, 22), textAlign: "center", width: "100%" }}>
-        <PopIn delay={2} style={{ display: "flex", justifyContent: "center" }}>
-          <Logo size={190} />
-        </PopIn>
+        <PopIn delay={2} style={{ display: "flex", justifyContent: "center" }}><Logo size={190} /></PopIn>
         <FadeUp delay={18} style={{ marginTop: 2 }}>
-          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 92, color: C.blue, letterSpacing: -2 }}>Fitshark</div>
+          <div style={{ fontFamily: HEAD, fontWeight: 700, fontSize: 92, color: C.clay, letterSpacing: -2 }}>Fitshark</div>
         </FadeUp>
-        <FadeUp delay={30} style={{ marginTop: 8 }}>
-          <Body size={38}>From question to sale.</Body>
-        </FadeUp>
-        <FadeUp delay={42} style={{ marginTop: 10 }}>
-          <Body size={24} style={{ color: C.gray }}>built on Duvo</Body>
-        </FadeUp>
+        <FadeUp delay={30} style={{ marginTop: 8 }}><Body size={38}>From question to sale.</Body></FadeUp>
+        <FadeUp delay={42} style={{ marginTop: 10 }}><Body size={24} style={{ color: C.gray }}>built on Duvo</Body></FadeUp>
       </div>
     </Stage>
   );

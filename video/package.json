@@ -5,7 +5,8 @@
   "description": "Fitshark explainer video (Remotion, Anthropic-style)",
   "scripts": {
     "studio": "remotion studio",
-    "render": "remotion render Fitshark out/fitshark.mp4 --concurrency=2"
+    "render": "remotion render Fitshark out/fitshark.mp4 --concurrency=2",
+    "render5": "remotion render Fitshark out/fitshark_anthropic.mp4 --concurrency=2"
   },
   "dependencies": {
     "@remotion/google-fonts": "4.0.394",

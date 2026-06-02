@@ -6,15 +6,14 @@ export const { fontFamily: HEAD } = loadPoppins("normal", {
 });
 export const { fontFamily: BODY } = loadLora("normal", { weights: ["400", "500"] });
 
-// Calm cream canvas + blue primary (matches the Fitshark logo) + gold for the "money/sale" beats.
+// Anthropic palette — calm cream canvas, clay primary accent, blue/green secondary.
 export const C = {
   cream: "#faf9f5",
   dark: "#141413",
   gray: "#b0aea5",
   lightGray: "#e8e6dc",
-  blue: "#2f6fdf",
-  blueDeep: "#1f4fae",
-  gold: "#e0a92e",
+  clay: "#d97757",
+  blue: "#6a9bcc",
   green: "#788c5d",
 };
 
