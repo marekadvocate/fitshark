@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150" role="img" aria-label="Fitshark">
+  <!-- faint reflection (flat, no gradient) -->
+  <path d="M80 82 C86 108,98 130,126 140 C122 120,116 100,108 82 Z" fill="#6a9bcc" opacity="0.16"/>
+  <!-- calm water line -->
+  <path d="M24 82 Q100 78 176 82 Q100 86 24 82 Z" fill="#8fb3d6"/>
+  <!-- shark fin -->
+  <path d="M80 82 C86 56,98 34,126 24 C122 44,116 64,108 82 Z" fill="#6a9bcc"/>
+</svg>

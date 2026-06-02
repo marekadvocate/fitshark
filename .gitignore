@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .venv/
 duvo/catalog.csv
+
+# binary / third-party assets (keep out of public repo)
+video/public/music.mp3
+video/public/logo.png
+assets/fitshark_logo.png
