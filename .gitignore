@@ -7,5 +7,9 @@ duvo/catalog.csv
 # binary / third-party assets (keep out of public repo)
 video/public/music.mp3
 video/public/logo.png
+video/public/showcase.mp4
+video/public/shot_*.png
+video/out/
+screens/
 assets/fitshark_logo.png
 assets/fitshark_logo2.png
