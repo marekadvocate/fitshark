@@ -1,27 +1,29 @@
 import React from "react";
 import { AbsoluteFill, Audio, interpolate, Series, staticFile, useCurrentFrame } from "remotion";
 import { C } from "./theme";
-import { Hook, Cost, Intro, HowItWorks, KeyValue, Reply, Results, Close } from "./scenes";
+import { S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11 } from "./scenes";
 
-// Beat-synced to the music (~128 BPM → 14 frames/beat). Each scene length is a
-// whole number of beats, so slide changes land on the beat. (beats shown in comments)
+// Beat-synced to the music (~128 BPM → 14 frames/beat). Cuts land on the beat.
 const BEAT = 14;
 const S = [
-  { c: Hook, beats: 12 },        // title
-  { c: Cost, beats: 10 },        // problem
-  { c: Intro, beats: 28 },       // architecture
-  { c: HowItWorks, beats: 18 },  // parallel / concurrency 10
-  { c: KeyValue, beats: 18 },    // grounded matching
-  { c: Reply, beats: 26 },       // core: out-of-stock -> ordered
-  { c: Results, beats: 18 },     // after the send
-  { c: Close, beats: 16 },       // close / stack
+  { c: S1, beats: 9 },   // open
+  { c: S2, beats: 9 },   // the question
+  { c: S3, beats: 7 },   // the gap
+  { c: S4, beats: 11 },  // logo reveal
+  { c: S5, beats: 9 },   // understands
+  { c: S6, beats: 11 },  // 110,000 parts
+  { c: S7, beats: 13 },  // WOW: out of stock -> ordered (dark)
+  { c: S8, beats: 15 },  // the reply (hero)
+  { c: S9, beats: 7 },   // you approve, it sends
+  { c: S10, beats: 11 }, // browsers become buyers
+  { c: S11, beats: 13 }, // close
 ].map((s) => ({ c: s.c, len: s.beats * BEAT }));
 
-export const TOTAL = S.reduce((a, s) => a + s.len, 0); // 3030
+export const TOTAL = S.reduce((a, s) => a + s.len, 0); // 1610
 
 const Music: React.FC = () => {
   const frame = useCurrentFrame();
-  const v = interpolate(frame, [0, 40, TOTAL - 60, TOTAL], [0, 0.2, 0.2, 0], {
+  const v = interpolate(frame, [0, 36, TOTAL - 56, TOTAL], [0, 0.22, 0.22, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
