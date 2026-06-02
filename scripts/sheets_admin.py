@@ -115,7 +115,35 @@ def create_orders(drive, sheets):
     print(f"url=https://docs.google.com/spreadsheets/d/{sid}/edit")
 
 
+def create_index_partitioned(drive, sheets):
+    """Create an Index spreadsheet with one tab per vehicle_make (+ Universal) so the
+    consumer reads only the relevant make slice (a few thousand rows) instead of 110k."""
+    import csv as _csv
+    path = os.path.join(REPO, "feeds", "master_index.tsv")
+    rows = list(_csv.reader(open(path, encoding="utf-8"), delimiter="\t"))
+    header = rows[0]
+    mk = header.index("vehicle_make")
+    groups = {}
+    for r in rows[1:]:
+        make = (r[mk].strip() or "Universal")
+        groups.setdefault(make, []).append(r)
+    makes = sorted(groups)
+    f = sheets.spreadsheets().create(body={
+        "properties": {"title": "Fitshark - Catalog Index (by make)"},
+        "sheets": [{"properties": {"title": m}} for m in makes]}).execute()
+    sid = f["spreadsheetId"]
+    for m in makes:
+        data = [header] + groups[m]
+        sheets.spreadsheets().values().update(
+            spreadsheetId=sid, range=f"'{m}'!A1", valueInputOption="RAW",
+            body={"values": data}).execute()
+        print(f"  tab {m}: {len(groups[m])} rows")
+    print(f"INDEX_BY_MAKE spreadsheet_id={sid}  tabs={len(makes)}")
+    print(f"url=https://docs.google.com/spreadsheets/d/{sid}/edit")
+
+
 CMDS = {"strip": strip, "create-index": create_index,
+        "create-index-partitioned": create_index_partitioned,
         "create-questions": create_questions, "create-orders": create_orders}
 
 if __name__ == "__main__":

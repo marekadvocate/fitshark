@@ -10,10 +10,12 @@
     "google_account": "marekpodhorsky1993@gmail.com"
   },
   "central_files": {
-    "master_catalog_index": "15pXk42YlNq0INUR1jUQB8FH-oVD7H7-9ZDuA0Mjo58I",
+    "catalog_index_by_make": "1-arrGBGPUXjS2ElEMbu6NNogYzG2FtnYL3LQSwrSupA",
+    "catalog_index_flat_deprecated": "15pXk42YlNq0INUR1jUQB8FH-oVD7H7-9ZDuA0Mjo58I",
     "questions": "1Viv0a6SR9sZGTAdASFoep-acwaJKYINLgjvBLBqp0no",
     "orders": "1dekUFHcM1iEvL7lvtGBF9SYfIXyilrnrcBQfBdioo4U"
   },
+  "catalog_index_note": "Active search surface is catalog_index_by_make: one tab per vehicle_make (Audi..Volkswagen) + Universal, so the consumer reads only the relevant make slice (a few thousand rows) instead of the full 110k flat index (which was too slow to read in one call).",
   "agents": {
     "fitment_producer": "b3aacb00-c079-4301-81e6-853d316b18cd",
     "fitment_consumer": "bb6b1e75-f598-4f89-b688-d29637a958fd"
