@@ -96,16 +96,19 @@ BODY:
 HTML:
 <html body>
 ```
-**Sending — ALWAYS send the HTML.** The customer must receive the rich branded HTML version (the
-FITSHARK card with the product, badge, "Order this part" button, upsell and footer) — never the bare
-plain text. The Gmail send tool renders HTML placed in its `body` argument, so:
-- Put the full rendered **HTML Body** into the send tool's `body` parameter. (The Gmail connector
-  renders HTML in `body` — this is how the branded email appears in the inbox.)
-- If the tool ALSO exposes a dedicated html field (`html`, `html_body`, `body_html`) use that for the
-  HTML and put the plain-text in the text field — but the default and reliable path is: HTML → `body`.
-- Do NOT send the plain-text version as the email body. Keep the plain-text only as an internal fallback
-  reference. The same HTML template is used for every reply — in-stock and out-of-stock alike (only the
-  status badge text and the price/delivery values change).
+**Sending — REQUIRED: send the HTML with `isHtml: true`.** The Gmail send tool (`send_email`) takes
+these arguments: `to`, `subject`, `body`, **`isHtml`**, `attachments`. You MUST call it like this for
+EVERY email (initial reply and follow-up, in-stock and out-of-stock alike):
+- `to`: [customer_email]
+- `subject`: the Subject line
+- `body`: the FULL rendered **HTML Body** (the `<div …>…</div>` template) — never the plain text
+- **`isHtml`: true**  ← MANDATORY. Without it the client shows the raw markup / plain text. This is the
+  single most important field — if you omit it or set it false, the branded template will NOT render.
+- `attachments`: the PDF quote file, when one was generated.
+
+Do NOT put the plain-text version in `body`. The plain-text is only an internal fallback reference.
+The same HTML template is used for every reply — only the status badge ("In stock" / "Available on
+order") and the price/delivery values change.
 
 ## Don'ts
 - Don't expose internal data (supplier names, SKU codes, wholesale prices, margins).

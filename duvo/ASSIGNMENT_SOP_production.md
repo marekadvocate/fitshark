@@ -73,8 +73,9 @@ NEVER raise a human request for setup. Create what you need yourself.
 4. HUMAN APPROVAL — one approval per question, BEFORE sending. Title:
    "Reply <question_id> -> <product_name> (<price_incl_vat> <currency>, <lead_time>)"; description = full
    draft (To, Subject, Body) + matched details + detected language + alternative.
-   APPROVED → send via Gmail with the rendered HTML put into the `body` argument (the connector renders
-   HTML in body; never send plain-text as the body), and attach the PDF quote if available.
+   APPROVED → send via Gmail by calling send_email with: to=[customer_email], subject, body=the FULL
+   HTML Body, **isHtml: true** (MANDATORY — without it the email shows as raw/plain text), and
+   attachments=[the PDF quote] if generated. Never put the plain-text version in `body`.
    DENIED → log "Rejected" + reason; do not send.
 
 5. RECORD after the outcome:

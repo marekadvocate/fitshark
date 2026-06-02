@@ -29,19 +29,27 @@ In Duvo, the feeds and questions live in Google Drive (account `dominikfroncik@g
 ## 2. How it works (architecture)
 
 ```
-                    Google Drive: MOTOR PARTS QUESTIONS / customer_questions.csv  (grows over time)
-                                                │
-                                                ▼
-                         ┌──────────────────────────────────────────┐
-                         │  Case Queue "fitshark-questions"           │   one CASE per inquiry
-                         └──────────────────────────────────────────┘
-                                                │  case trigger (CONCURRENCY = 10)
-                          ┌──────────────┬──────┴───────┬──────────────┐   ← PARALLEL: up to 10 at once
-                          ▼              ▼              ▼              ▼
-                       Job (case)     Job (case)    Job (case)    Job (case)        each is an independent
-                          │              │              │              │            job with its OWN approval
-   per job:  grep the 11 supplier feeds (Drive) → match product → compose reply
-             (skills) → attach PDF quote → ▶ HUMAN APPROVAL (Activity Inbox) ──→ send (Gmail)
+   Google Drive: MOTOR PARTS QUESTIONS / customer_questions.csv   (grows over time)
+                                  │
+                                  ▼
+   ┌──────────────────────────────────────────────────────────────────┐
+   │  PRODUCER agent  (scheduled hourly)                                │
+   │  • reads the CSV, dedups vs existing cases                         │
+   │  • downloads the 11 feeds ONCE, matches each new inquiry + upsell  │
+   │  • enqueues one CASE per inquiry with the product PRE-MATCHED      │
+   └──────────────────────────────────────────────────────────────────┘
+                                  │
+                                  ▼
+            ┌──────────────────────────────────────────┐
+            │  Case Queue "fitshark-questions"           │   one CASE per inquiry (data has the match)
+            └──────────────────────────────────────────┘
+                                  │  case trigger (CONCURRENCY = 10)
+            ┌──────────────┬──────┴───────┬──────────────┐   ← PARALLEL: up to 10 at once
+            ▼              ▼              ▼              ▼
+         Job (case)     Job (case)    Job (case)    Job (case)     each is an independent
+            │              │              │              │         job with its OWN approval
+   CONSUMER per job (lightweight — NO feed search):  compose branded HTML reply (skills) from the
+   pre-matched data → attach PDF quote → ▶ HUMAN APPROVAL (Activity Inbox) ──→ send HTML email (Gmail)
                           │
                           ▼
         Google Sheets:  Responses Log  +  Customer Vehicles        (audit + CRM for later offers)
@@ -51,6 +59,10 @@ In Duvo, the feeds and questions live in Google Drive (account `dominikfroncik@g
 
         Later / separately:  Campaign agent reads Customer Vehicles → personalized seasonal offers.
 ```
+
+**Producer / consumer split = efficiency.** The producer downloads the 66 MB of feeds **once per hour**
+and pre-resolves the match into each case; the consumer never touches the feeds, so the 10 parallel
+consumer jobs are cheap and fast.
 
 **Why a Case Queue?** A single agent run can only hold one Human-in-the-Loop approval at a time (it
 pauses until you answer), which forces sequential approving. By turning each inquiry into a **case** and
@@ -76,15 +88,15 @@ Skills are attached to a build **by skill ID** (attaching by name silently fails
 
 ## 4. Agents (Duvo team "Advocate")
 
-| Agent | Role | Notes |
-|-------|------|-------|
-| **Fitshark — Reply Consumer (Queue)** | **Primary.** Case-queue **consumer**, trigger **concurrency 10**. Processes one case → match → compose → approve → send → log → save vehicle → resolve case. | The parallel production path. |
-| **Fitshark — Personalized Offers (Campaign)** | Reads Customer Vehicles → builds personalized offers (offer-personalizer) → human-approved sends → Campaign Log. Weekly schedule (disabled until vehicle data exists). | Later re-engagement / upsell. |
-| **Fitshark — Backorder Reply (Production)** | Earlier **sequential** version (single run loops the CSV, one approval at a time). 10-min schedule (disabled). Superseded by the queue consumer for parallel approval. | Kept as reference. |
-| _Fitshark — Drive TEST v2 / Drive CSV Editor / Sheets agent_ | Experimental/one-off agents used while building. | Safe to delete. |
+Exactly **three** active agents (experimental/test agents were deleted):
 
-All production agents use the `dominikfroncik@gmail.com` Google connections (Drive + Sheets + Gmail) and
-Human-in-the-Loop.
+| Agent | Role | Schedule |
+|-------|------|----------|
+| **Fitshark — Question Producer (Queue)** | Reads the Drive CSV, dedups vs existing cases, downloads feeds once, matches new inquiries + upsell, enqueues pre-matched **cases**. Connections: Drive + Case Queue (Producer). | **Hourly** (enabled) |
+| **Fitshark — Reply Consumer (Queue)** | **Primary.** Case-queue **consumer**, trigger **concurrency 10**. Per case (no feed search): compose branded HTML reply from the pre-matched data → HITL approval → send → log → save vehicle → resolve case. Connections: Sheets + Gmail + HITL + Case Queue (Consumer). | case-triggered |
+| **Fitshark — Personalized Offers (Campaign)** | Reads Customer Vehicles → personalized seasonal offers (offer-personalizer) → human-approved sends → Campaign Log. Connections: Sheets + Drive + Gmail + HITL. | Weekly (disabled until vehicle data exists) |
+
+All agents use the `dominikfroncik@gmail.com` Google connections and Human-in-the-Loop.
 
 ---
 

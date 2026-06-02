@@ -57,7 +57,9 @@ Save URL to memory. NEVER raise a human request for setup.
 
 4. HUMAN APPROVAL — one per customer, before sending. Title:
    "Offer -> <customer_email> (<vehicle_compatibility>)"; description = full draft + items + rationale.
-   APPROVED → send via Gmail. DENIED → log "Rejected" + reason.
+   APPROVED → send via Gmail by calling send_email with: to=[customer_email], subject, body=the FULL
+   HTML Body, **isHtml: true** (MANDATORY — without it the email shows as raw/plain text). Never put the
+   plain-text version in `body`. DENIED → log "Rejected" + reason.
 
 5. RECORD after the outcome: append a Campaign Log row (sent_date=today, customer_email,
    vehicle_compatibility, theme, items, status, run_reference). Only "Sent" rows count toward the throttle.
