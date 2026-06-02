@@ -1,0 +1,17 @@
+{
+  "version": "v2",
+  "data": {
+    "models": {
+      "agent": {
+        "model": "claude-sonnet-4-5-20250929"
+      },
+      "browsing": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-5"
+      }
+    },
+    "input": "GOAL: Update customer_questions.csv in Google Drive so every customer_email value is dominik@fronc.eu, in place.\n\n# CONNECTION USED\n- Google Drive (read + write).\n\n# STEPS\n1. In the \"MOTOR PARTS QUESTIONS\" Drive folder (folder id 1QqOqPR_iX-obfEZ09yR1GgCfGFbUPw2Y), find the file\n   customer_questions.csv and download it to your workspace.\n2. Read the CSV (it has a header row). Ensure a `customer_email` column exists:\n   - If it exists: set EVERY data row's customer_email value to exactly: dominik@fronc.eu\n   - If it does not exist: add a `customer_email` column immediately after the `customer_question`\n     column, and set it to dominik@fronc.eu for every row.\n3. Keep all other columns, all rows, the row order, and every other value EXACTLY as they are.\n   Change nothing else. Keep the CSV valid (quote any field containing a comma), UTF-8, same header style.\n4. Upload the updated file back to Google Drive, REPLACING the same file (same fileId / same name in the\n   same folder). If replacing in place is not supported by the available tools, upload it as\n   customer_questions.csv into the same folder and clearly tell me you created a new file instead of replacing.\n5. Report: how many rows were updated, whether the column already existed or was added, and the final\n   file location (replaced vs new).\n\n# RULES\n- Do not email anyone. Do not modify any other file. Do not touch the feeds.\n",
+    "files": [],
+    "skills": []
+  }
+}
