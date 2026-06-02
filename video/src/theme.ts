@@ -11,8 +11,10 @@ export const C = {
   cream: "#faf9f5",
   dark: "#141413",
   gray: "#b0aea5",
+  sub: "#6b685f", // readable warm-gray for sublines (not washed-out)
   lightGray: "#e8e6dc",
   clay: "#d97757",
+  shark: "#1c9cc0", // the shark/icon teal — used for the Fitshark wordmark
   blue: "#6a9bcc",
   green: "#788c5d",
 };
