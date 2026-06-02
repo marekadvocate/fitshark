@@ -1,4 +1,8 @@
-# Fitshark — Backorder Reply System (Duvo)
+<p align="center">
+  <img src="assets/fitshark-logo.png" alt="Fitshark logo" width="130" />
+</p>
+
+<h1 align="center">Fitshark — Backorder Reply System (Duvo)</h1>
 
 An end-to-end AI automation built on **[Duvo](https://duvo.ai)** that answers customer inquiries about
 **out-of-stock auto parts**. It reads customer questions, finds the matching product across 11 supplier
@@ -31,6 +35,11 @@ In Duvo, the feeds and questions live in Google Drive:
 
 ## 2. How it works (architecture)
 
+![Fitshark backorder-reply architecture — an hourly producer reads the questions CSV, downloads the 11 feeds once and enqueues pre-matched cases; a case queue fans out to up to 10 parallel consumer jobs that each compose a branded HTML reply + PDF quote, get independent human approval, send via Gmail, and log to the Responses Log + Customer Vehicles CRM, with a 3-day follow-up and a separate seasonal campaign agent](assets/fitshark-architecture.png)
+
+<details>
+<summary>Text version of the diagram</summary>
+
 ```
    Google Drive: MOTOR PARTS QUESTIONS / customer_questions.csv   (grows over time)
                                   │
@@ -62,6 +71,8 @@ In Duvo, the feeds and questions live in Google Drive:
 
         Later / separately:  Campaign agent reads Customer Vehicles → personalized seasonal offers.
 ```
+
+</details>
 
 **Producer / consumer split = efficiency.** The producer downloads the 66 MB of feeds **once per hour**
 and pre-resolves the match into each case; the consumer never touches the feeds, so the 10 parallel
