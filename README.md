@@ -1,193 +1,119 @@
-# Fitshark — Fitment-to-Sale Automotive Agent System
+# Fitshark — Cross-Catalog Automotive Marketplace Agent
 
-Fitshark turns unanswered pre-purchase automotive questions — *"does this part fit my car?"* —
-into **immediate, accurate, grounded answers**, and when needed into **drafted purchase orders**
-and **personalized sales replies**. Instead of a human replying a day later (or never), an agent
-starts working the moment a question arrives.
+Fitshark turns pre-purchase automotive questions — *"does this part fit my car / how much / how
+soon?"* — into **immediate, accurate, grounded answers**, delivered as a **branded HTML email** with
+a **unique per-customer buy link**. A human approves every send (Human-in-the-Loop).
 
-The system is a **producer/consumer "Chain"** built entirely on the **[Duvo](https://www.duvo.ai)**
-platform (orchestrated via the Duvo MCP server) plus **Google Sheets** as the per-seller data store.
-It is **multi-seller**: up to 11 automotive parts e-shops, each with its own Google Sheet and the
-same Standard Operating Procedures (adding a seller is pure config — no SOP changes).
+**v2 is a marketplace/aggregator:** Fitshark is the customer-facing brand; suppliers are backend.
+A question is **not pre-routed** to one shop — the agent searches **across all 11 supplier catalogs**
+and returns the best market match (price / stock / lead time). Supplier names, internal SKUs,
+wholesale prices and margins are **never exposed** to the customer.
 
-This repository holds the **synthetic test data** (supplier feeds + customer questions) and the
-**loader scripts** that push that data into the sellers' Google Sheets. The live logic lives in
-Duvo objects, not in this repo.
+Built entirely on **[Duvo](https://www.duvo.ai)** (orchestrated via the Duvo MCP server) + Google
+Sheets + Gmail. This repo holds the **synthetic test data** and the **loader/build scripts**; the
+live logic lives in Duvo objects.
 
-> ⚠️ **Synthetic data only.** Fictional suppliers, random codes/EANs/prices; test customers use
-> `@example.test` addresses. Manufacturer brands and vehicle models are real only for feed realism.
+> ⚠️ Synthetic data only — fictional suppliers, random codes/EANs/prices. Test customer emails are the
+> team's own inboxes. Manufacturer brands and vehicle models are real for feed realism.
 
 ---
 
 ## Architecture
 
 ```
-                         Google Sheet per seller (×11)
-                ┌──────────────────────────────────────────────┐
-                │ Catalog · Inbound_Questions · Fitment ·        │
-                │ Supplier_Catalog · Orders                      │
-                └──────────────────────────────────────────────┘
-                      ▲ read questions           ▲ read catalog / write audit
-                      │                           │
-   ┌──────────────────┴───────┐        ┌──────────┴───────────────────────┐
-   │  fitment-producer        │  case  │  fitment-consumer                 │
-   │  (poll → normalize →      │ ─────▶ │  decision tree → HITL gates →     │
-   │   enqueue case)          │ queue  │   reply / PO → write-back audit   │
-   └──────────────────────────┘        └───────────────────────────────────┘
-        every-5-min schedule        fitment_intent          Human-in-the-Loop
-                                     (shared queue)          Gmail · Supplier sourcing
+        Fitshark Questions (1 central sheet)        Master Catalog Index (1 sheet, ~110k rows)
+                     │  status=new                            ▲ one read + in-code filter
+                     ▼                                        │ (search ALL 11 suppliers)
+        ┌────────────────────────┐   case    ┌───────────────┴───────────────────────────┐
+        │  fitment-producer       │ ───────▶ │  fitment-consumer                          │
+        │  poll · infer intent/   │  queue   │  best-match → unique buy link → reply →     │
+        │  vehicle/part (symptoms)│ fitment_ │  localize → HTML → HITL → Gmail send →      │
+        └────────────────────────┘  intent  │  Fitshark Orders (full answer log)          │
+                                             └─────────────────────────────────────────────┘
+                                                   Human-in-the-Loop · Gmail (HTML)
 ```
 
-- **Case Queue `fitment_intent`** — shared across all sellers. Each case carries labels
-  `seller_id`, `language`, `intent`, `priority`.
-- **`fitment-producer`** (assignment) — polls every seller's `Inbound_Questions` (status `new`),
-  extracts customer / vehicle / part, detects language + intent, and enqueues one normalized case.
-  Never replies to the customer.
-- **`fitment-consumer`** (assignment) — triggered per new case. Runs the decision tree, drafts the
-  reply / purchase order, pauses at **Human-in-the-Loop** gates, then acts and writes the audit row.
-- **Skills** — `fitment-decision` (deterministic fit/alternative/source logic + strict output
-  contract) and `seller-voice` (per-seller tone + multilingual reply templates SK/CZ/EN/DE/PL).
-- **`feed-ingestion`** (assignment) — one-off helper to import a supplier feed into a seller Sheet.
-- **Per-seller registry** — `seller_registry.json` (a Duvo file) maps `seller_id →
-  {spreadsheet_id, gmail_connection, supplier_access, …}`. Adding sellers 2–11 = a new block here.
+- **Producer** polls the central **Questions** sheet, infers what the customer needs (even from
+  symptoms — *"squeals when braking"* → brake pads), and enqueues a normalized case (no seller_id).
+- **Consumer** searches the **Master Catalog Index** across all suppliers in one read + in-code
+  filter, picks the best offer, builds a unique buy link, drafts a Fitshark-branded HTML reply,
+  pauses at a **HITL gate**, sends via Gmail, and logs to **Orders**.
 
-### Consumer decision tree (summary)
+### Data files (Google Sheets)
 
-1. **Identify** the asked part in `Catalog` (SKU / OEM / name).
-2. **Fitment** against the vehicle (make / model / year-range / engine):
-   - fits + in stock → confirm reply (price + link),
-   - fits + out of stock → pre-order / ETA reply,
-   - doesn't fit → recommend the correct in-stock alternative,
-   - no match / no stock / no alternative → **supplier sourcing**.
-3. **Supplier sourcing** → draft a PO → **HITL gate #1** (approve the order).
-4. **Draft customer reply** (seller-voice) → **HITL gate #2** (approve the send) → send via Gmail.
-5. **Close & audit** → append a row to `Orders`, set the `Inbound_Questions` status.
-6. *Escalation:* a negative-sentiment complaint with a phone number proposes an **Outbound Call**
-   (HITL-approved) instead of an email.
-
-**Every side-effect — sending an email, committing a PO, placing a call — passes through a Human-in-the-Loop
-approval gate first.** The agent drafts; a human approves; only then does it act.
-
----
-
-## Duvo objects (team *Advocate*)
-
-| Object | Type | ID |
-|---|---|---|
-| `fitment_intent` | Case Queue | `ca600d25-f6e2-451e-a02d-a9f6e3f83b13` |
-| `fitment-producer` | Assignment | `0e1c81c3-3352-4be4-9c14-9721fd4d4801` |
-| `fitment-consumer` | Assignment | `a85a14d0-3b91-43d5-90ce-58927a0c3c5c` |
-| `feed-ingestion` | Assignment | `5a331849-0752-44ea-9fb1-848bcaa37e5c` |
-| `fitment-decision` | Skill | `b7cf089a-893a-4615-9dd6-339789ff3930` |
-| `seller-voice` | Skill | `17b629d7-ce99-44ee-82b3-7fbc63a2d2fa` |
-| Producer poll | Schedule (every 5 min) | `a34839b4-…` *(disabled until go-live)* |
-| Consumer case trigger | Case Trigger | `64c75e50-…` *(enabled)* |
-
-**Connections:** Google Sheets + Gmail (OAuth, pinned to both assignments), Human-in-the-Loop,
-Enterprise Browser, Web Scraper, Outbound Call. OAuth connections are authorized in the Duvo UI
-(or via `startNativeOAuth`) — they cannot be minted head­lessly.
-
----
-
-## Data model — one Google Sheet per seller
-
-Each seller's spreadsheet has five tabs:
-
-| Tab | Purpose |
+| File | Role |
 |---|---|
-| `Catalog` | the supplier's full product feed (70 columns, ~10k SKU). Vehicle fitment is embedded per row, so the consumer reads fitment directly from here. |
-| `Inbound_Questions` | incoming customer questions (`status = new → queued → answered/…`). |
-| `Fitment` | documented placeholder — fitment is embedded in `Catalog` for this dataset. |
-| `Supplier_Catalog` | fallback wholesale source for supplier sourcing (Step D). |
-| `Orders` | the audit log: decision, action, approver, timestamps, est. revenue. |
+| 11 × **Catalog** | full supplier feed, **one `Catalog` tab only** (read-only product source) |
+| **Master Catalog Index** | ~110k rows, slim columns + `seller_id` — the cross-catalog search surface |
+| **Fitshark Questions** | central intake of customer questions (`new → queued → answered`) |
+| **Fitshark Orders** | central, searchable **full answer log** (question, match, reply, status, …) |
 
-The 11 sellers map 1:1 to the feeds in `feeds/` (e.g. `feed_aps.tsv` → *AutoParts Slovakia Ltd.*
-→ `seller_001`).
+### Skills (Duvo)
+
+`fitment-decision` (cross-catalog best-match) · `fitshark-product-link` (plain `/p/` link + **unique
+per-customer `/buy/` link**) · `fitshark-reply-writer` (Fitshark-branded reply, hides internals) ·
+`seller-voice` (multilingual localization SK/CZ/EN/DE/PL) · `fitshark-email-template` (branded HTML
+email + CTA buy button + plain-text fallback).
+
+### Unique per-customer buy link
+
+```
+https://shop.fitshark.example/buy/<slug>?cid=<question_id>&t=<token8>
+```
+`<slug>` = lowercased SKU (non-alphanumeric → hyphen); `<token8>` = first 8 hex of
+`sha256(customer_email + "|" + supplier_sku)`. Deterministic yet unique to (customer, product).
 
 ---
 
 ## Test data in this repo
 
-### Supplier feeds — `feeds/` (11 × ~10,000 SKU, 70 columns, TSV)
+### `feeds/` — 11 supplier feeds (11 × ~10,000 SKU, 70 columns, TSV)
 
-Market SK · EUR · VAT 23% · 100% ASCII English. Vehicle fitment is split into structured columns
-using the **same spelling and format in every feed** (`vehicle_make`, `vehicle_model`,
-`vehicle_generation`, `vehicle_year_from`/`vehicle_year_to`, `vehicle_compatibility`), so it is
-searchable across feeds. 13 makes, 24 model+generation combos; universal parts use
-`vehicle_compatibility = Universal`.
+Market SK · EUR · VAT 23%. Vehicle fitment is in structured columns
+(`vehicle_make/model/generation/year_from/year_to/compatibility`, `Universal` for non-vehicle parts).
+Each feed = one supplier → one seller (`feed_aps.tsv` → AutoParts Slovakia → `seller_001`, etc.).
 
-| File | Supplier → seller | Focus |
-|---|---|---|
-| `feed_aps.tsv` | AutoParts Slovakia Ltd. → `seller_001` | full range |
-| `feed_mds.tsv` | MotoParts SK Ltd. → `seller_002` | full range |
-| `feed_bpr.tsv` | BrakePro Ltd. → `seller_003` | brakes |
-| `feed_flc.tsv` | FilterCentre Ltd. → `seller_004` | filters |
-| `feed_olx.tsv` | OilExpert Ltd. → `seller_005` | oils / fluids |
-| `feed_pns.tsv` | TyreService SK Ltd. → `seller_006` | tires + wheels |
-| `feed_ela.tsv` | ElectroAuto Ltd. → `seller_007` | batteries + lighting |
-| `feed_dex.tsv` | PartsExpress Ltd. → `seller_008` | spare parts |
-| `feed_cst.tsv` | CarStyle Ltd. → `seller_009` | accessories |
-| `feed_eud.tsv` | EuroParts Plc. → `seller_010` | full range |
-| `feed_mmk.tsv` | MotoMarket Ltd. → `seller_011` | full range |
+### `feeds/master_index.tsv` — Master Catalog Index (110k rows, 18 columns)
 
-Column groups: identity (sku, EAN, MPN, OE numbers, TecDoc) · brand/classification · text · variants ·
-pricing (wholesale/retail excl. & incl. VAT, margin, discount, sale, unit, core deposit) ·
-stock & logistics · dimensions/weight · structured vehicle fitment · automotive (standards, HS code,
-origin, condition) · tire EU label · oil standards · media & meta.
+Built from the 11 feeds: `seller_id, supplier, supplier_sku, product_name, brand, category,
+oe_numbers, vehicle_*`, `retail_price_incl_vat, stock_qty, availability, lead_time_days,
+product_link`.
 
-### Customer questions — `questions/customer_questions.csv` (100)
+### `questions/customer_questions.csv` — 100 customer questions
 
-Realistic English inquiries about **out-of-stock products**, evenly distributed across the 11 sellers
-(~9–10 each). Every question maps to a real feed row (`availability = On order`, `stock_qty = 0`), so
-a matching product + real price + delivery time always exists.
-
-| Column | Purpose |
-|---|---|
-| `question_id` | Q001–Q100 |
-| `customer_question` | the natural-language inquiry (agent input) |
-| `expected_*` | ground-truth match (supplier, feed file, sku, product, brand, category, vehicle, variant) |
-| `availability`, `expected_lead_time`, `expected_price_incl_vat`, `currency` | reference answer for validation |
-
-The `expected_*` columns are the test oracle — they are **not** fed to the agent.
+**Multilingual** (SK/CZ/EN/DE/PL, ~20 each), `customer_email` alternates between the two real test
+inboxes, ~7 **symptom/implicit** questions (part not named → tests inference). `expected_*` columns
+are the answer-key (not fed to the agent).
 
 ---
 
-## Loading data into Google Sheets
-
-The feeds are too large (~6 MB each) for an LLM or `IMPORTDATA` to ingest reliably, so a local script
-streams them straight into Drive (media upload → convert to a Google Sheet — data never passes through
-any model context). Sheets are created under the Google account that backs the Duvo Sheets connection,
-so the assignments can read/write them.
+## Scripts (`scripts/`)
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install google-api-python-client google-auth-httplib2
-gcloud auth login --enable-gdrive-access          # log in as the Duvo Sheets account
+gcloud auth login --enable-gdrive-access     # Google account that owns the sheets
 
-.venv/bin/python scripts/upload_feeds.py aps      # one seller (feed_aps → seller_001)
-.venv/bin/python scripts/upload_feeds.py mds bpr flc olx pns ela dex cst eud mmk   # the rest
-.venv/bin/python scripts/upload_questions.py      # distribute the 100 questions to each seller
+python3 scripts/make_questions.py            # regenerate multilingual questions
+python3 scripts/build_index.py               # build feeds/master_index.tsv
+
+.venv/bin/python scripts/sheets_admin.py strip             # remove extra tabs from the 11 catalogs
+.venv/bin/python scripts/sheets_admin.py create-index      # → Master Catalog Index sheet
+.venv/bin/python scripts/sheets_admin.py create-questions  # → Fitshark Questions sheet
+.venv/bin/python scripts/sheets_admin.py create-orders     # → Fitshark Orders sheet
 ```
 
-Each upload creates the 5 tabs, imports the feed into `Catalog`, and prints the `spreadsheet_id`.
+- `make_questions.py` — multilingual questions + real test emails + symptom/implicit cases.
+- `build_index.py` — build the Master Catalog Index from the feeds.
+- `sheets_admin.py` — strip catalog tabs; create the Index / Questions / Orders sheets.
+- `upload_feeds.py` — upload each feed into its own Google Sheet (catalog).
+- `generate_rich.py`, `generate_feed.py`, `generate_varied.py` — feed generators.
 
-### Scripts (`scripts/`)
+Object IDs (sheets, agents, skills, connections) are recorded in `config/fitshark.json`. Design and
+plan live in `docs/superpowers/`.
 
-- `upload_feeds.py` — feed TSV → one Google Sheet per seller (5 tabs).
-- `upload_questions.py` — `customer_questions.csv` → each seller's `Inbound_Questions`.
-- `generate_rich.py` — current feed generator (deterministic, 70-col English TSV).
-- `make_questions.py` — regenerate the customer questions from the feeds.
-- `generate_feed.py`, `generate_varied.py` — earlier / heterogeneous-schema generators.
+## Running
 
----
-
-## Running the pipeline
-
-1. Ensure the seller Sheets are populated (above) and `seller_registry.json` has each
-   `spreadsheet_id`.
-2. **Go live:** enable the `fitment-producer` schedule (every 5 min) — or start a manual run.
-3. The producer enqueues `new` questions → the consumer fires per case → it pauses at the
-   Human-in-the-Loop gates → approve in the **Duvo dashboard** → it sends the reply / commits the PO
-   and writes the `Orders` audit row.
-
-> Status: all Duvo objects and data are in place; the producer schedule is left **disabled** so the
-> live pipeline only starts on an explicit go-live.
+1. Populate the sheets (scripts above); `config/fitshark.json` has every ID.
+2. **Go live:** enable the `fitment-producer` schedule (every 5 min) or start a manual run.
+3. Producer enqueues questions → consumer matches across catalogs → pauses at the Human-in-the-Loop
+   gate → approve in the **Duvo dashboard** → branded HTML email is sent and the `Orders` row written.

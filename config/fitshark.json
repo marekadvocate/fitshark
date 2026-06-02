@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "model": "marketplace (cross-catalog aggregator)",
+  "team_id": "78c96305-46bc-466c-83f7-d7761daea24a",
+  "owner": "marekmicuda1@gmail.com",
+  "queue": { "name": "fitment_intent", "id": "ca600d25-f6e2-451e-a02d-a9f6e3f83b13" },
+  "connections": {
+    "google_sheets": "d20c49a9-9141-46d4-8bb8-3afe3378aa84",
+    "gmail": "aacd14a9-8c24-491d-918f-99203557e18d",
+    "google_account": "marekpodhorsky1993@gmail.com"
+  },
+  "central_files": {
+    "master_catalog_index": "15pXk42YlNq0INUR1jUQB8FH-oVD7H7-9ZDuA0Mjo58I",
+    "questions": "1Viv0a6SR9sZGTAdASFoep-acwaJKYINLgjvBLBqp0no",
+    "orders": "1dekUFHcM1iEvL7lvtGBF9SYfIXyilrnrcBQfBdioo4U"
+  },
+  "agents": {
+    "fitment_producer": "b3aacb00-c079-4301-81e6-853d316b18cd",
+    "fitment_consumer": "bb6b1e75-f598-4f89-b688-d29637a958fd"
+  },
+  "skills": {
+    "fitment_decision": "b7cf089a-893a-4615-9dd6-339789ff3930",
+    "fitshark_product_link": "e2ef1fd7-d4c6-4a8d-9ce5-1deeb274b37d",
+    "fitshark_reply_writer": "3b3f3a5d-f482-4c6e-b3fa-ddeec525242c",
+    "seller_voice": "17b629d7-ce99-44ee-82b3-7fbc63a2d2fa",
+    "fitshark_email_template": "472ec9f3-70b8-4269-9c0b-95c736b6500f"
+  },
+  "catalogs": {
+    "seller_001": { "supplier": "AutoParts Slovakia Ltd.", "feed": "feed_aps.tsv", "spreadsheet_id": "19Nbq5rEumh2tDXc01QtM-1o1sqr6O5J75kU2tw1QA-k" },
+    "seller_002": { "supplier": "MotoParts SK Ltd.", "feed": "feed_mds.tsv", "spreadsheet_id": "1oIech2NwtIBcZxd4xNJbtBztK-DBt6FleZn0v7L52tM" },
+    "seller_003": { "supplier": "BrakePro Ltd.", "feed": "feed_bpr.tsv", "spreadsheet_id": "1Cc12H6cUGB2xZa5v2aP5U4pFoa6Of24qnqgixeZUC9g" },
+    "seller_004": { "supplier": "FilterCentre Ltd.", "feed": "feed_flc.tsv", "spreadsheet_id": "1cgRkky0HZV4j5r7qMdo-_sQ8xWndtPQYLuulbV9BoCw" },
+    "seller_005": { "supplier": "OilExpert Ltd.", "feed": "feed_olx.tsv", "spreadsheet_id": "1qUTudtkUKh2I0q63cI9tgC8OfHbv6nzJAbxJtS-6Lt8" },
+    "seller_006": { "supplier": "TyreService SK Ltd.", "feed": "feed_pns.tsv", "spreadsheet_id": "1P20JP8u5Vizm_ptRYFR2nSulNMeR4zENgf3LWUiKPr4" },
+    "seller_007": { "supplier": "ElectroAuto Ltd.", "feed": "feed_ela.tsv", "spreadsheet_id": "1ImURaxdJLcOkJVp74x_UcpCRqoQdU0-8-6UD7tM_beA" },
+    "seller_008": { "supplier": "PartsExpress Ltd.", "feed": "feed_dex.tsv", "spreadsheet_id": "1fXuFHoi-pu6YDf76O5INts9xwdnMcxMJGadbYmYXQ-4" },
+    "seller_009": { "supplier": "CarStyle Ltd.", "feed": "feed_cst.tsv", "spreadsheet_id": "1IGIweETmdA5WsQBkHjGIerxqK7-99KfaQbtMn0llZu0" },
+    "seller_010": { "supplier": "EuroParts Plc.", "feed": "feed_eud.tsv", "spreadsheet_id": "1ek1nYHOOiyCC-AKBeoP4Rjsdqz8b1ycP-JrZ5rcs8yA" },
+    "seller_011": { "supplier": "MotoMarket Ltd.", "feed": "feed_mmk.tsv", "spreadsheet_id": "1fqzgeBjwVc7Ctc_1v73S2daxU0VDtWpfOLjHhYPkeaE" }
+  },
+  "buy_link": "https://shop.fitshark.example/buy/<slug>?cid=<question_id>&t=<sha256(email|sku)[:8]>",
+  "test_inboxes": ["marekmicuda1@gmail.com", "dominik@fronc.eu"]
+}
