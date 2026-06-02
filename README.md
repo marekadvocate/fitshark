@@ -1,4 +1,8 @@
-# Fitshark — Cross-Catalog Automotive Marketplace Agent
+<p align="center">
+  <img src="assets/fitshark-logo.png" alt="Fitshark logo" width="130" />
+</p>
+
+<h1 align="center">Fitshark — Cross-Catalog Automotive Marketplace Agent</h1>
 
 Fitshark turns pre-purchase automotive questions — *"does this part fit my car / how much / how
 soon?"* — into **immediate, accurate, grounded answers**, delivered as a **branded HTML email** with
@@ -20,6 +24,11 @@ live logic lives in Duvo objects.
 
 ## Architecture
 
+![Fitshark architecture — a customer question flows through fitment-producer (intent inference) and fitment-consumer (cross-catalog match across all 11 suppliers, unique buy link, branded HTML email) with a Human-in-the-Loop approval gate before Gmail send and Orders logging](assets/fitshark-architecture.png)
+
+<details>
+<summary>Text version of the diagram</summary>
+
 ```
         Fitshark Questions (1 central sheet)        Master Catalog Index (1 sheet, ~110k rows)
                      │  status=new                            ▲ one read + in-code filter
@@ -32,6 +41,8 @@ live logic lives in Duvo objects.
                                              └─────────────────────────────────────────────┘
                                                    Human-in-the-Loop · Gmail (HTML)
 ```
+
+</details>
 
 - **Producer** polls the central **Questions** sheet, infers what the customer needs (even from
   symptoms — *"squeals when braking"* → brake pads), and enqueues a normalized case (no seller_id).
