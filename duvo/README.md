@@ -74,55 +74,48 @@ approvals appear in the Activity Inbox at once and you approve them independentl
 ## 3. Skills (reusable knowledge packs, attached to the agents)
 
 Each skill is a reusable knowledge pack (a `SKILL.md`) under `duvo/skills/`. Skills are attached to a
-build **by skill ID** (attaching by name silently fails with "Unknown skill"). Definitions:
+build **by skill ID** (attaching by name silently fails with "Unknown skill").
 
 ### `fitshark-brand-voice`
-The single source of truth for HOW Fitshark talks. Defines tone (professional, warm, concise),
-formatting standards (greeting, price/delivery as a labelled list, one primary CTA, sign-off
-"Fitshark Customer Care"), the glossary ("available on order", "incl. VAT", …), the **fitment-guarantee**
-line ("✓ Confirmed to fit your <vehicle> — or we'll make it right"), and the hard don'ts (never expose
-supplier names / SKU codes / wholesale prices / margins; never overpromise). Every other customer-facing
-skill (reply-writer, quote-pdf, offer-personalizer) follows it, so all touchpoints stay consistent.
-**Used by:** Consumer, Campaign.
+- **What:** the single source of truth for *how* Fitshark talks — every customer-facing skill follows it, so all touchpoints stay consistent.
+- **Defines:** tone (professional, warm, concise); formatting (greeting, price/delivery as a labelled list, one primary CTA, sign-off "Fitshark Customer Care"); glossary ("available on order", "incl. VAT", …).
+- **Trust:** the fitment-guarantee line — "✓ Confirmed to fit your <vehicle> — or we'll make it right".
+- **Hard don'ts:** never expose supplier names / SKU codes / wholesale prices / margins; never overpromise.
+- **Used by:** Consumer, Campaign.
 
 ### `fitshark-reply-writer`
-Composes the customer reply itself.
-- **In:** customer_question, matched product (name, brand, variant, vehicle, availability, price incl.
-  VAT, currency, lead_time, image_url), ORDER_LINK + PRODUCT_LINK, today's date, optional upsell items.
-- **Out:** `SUBJECT`, a plain-text `BODY`, and a branded **HTML** `BODY` (a ~600px FITSHARK card:
-  product image, status badge, price/delivery box, "Order this part" button, optional "You might also
-  need" block, footer). Opens with the reassuring "even though it isn't in stock, we've been able to
-  secure it for you" framing, **written in the customer's own language** (EN/SK/CZ/DE/…).
+- **What:** composes the customer reply itself.
+- **Input:** customer_question, matched product (name, brand, variant, vehicle, availability, price incl. VAT, currency, lead_time, image_url), ORDER_LINK + PRODUCT_LINK, today's date, optional upsell items.
+- **Output:** `SUBJECT`, a plain-text `BODY`, and a branded **HTML** `BODY` — a ~600px FITSHARK card with product image, status badge, price/delivery box, "Order this part" button, optional "You might also need" block, footer.
+- **Tone:** opens with the reassuring "even though it isn't in stock, we've been able to secure it for you" framing, **in the customer's own language** (EN/SK/CZ/DE/…).
 - **Send rule:** the HTML body is sent with `isHtml: true` so it renders as the branded email.
-**Used by:** Consumer, Campaign.
+- **Used by:** Consumer, Campaign.
 
 ### `fitshark-product-link`
-Builds, deterministically from the SKU, two URLs: (1) the **product page** `…/p/<sku-slug>` and (2) a
-**unique per-customer order link** `…/order/<question_id>-<sku-slug>?email=<urlencoded>&utm_…`. The order
-reference (`<question_id>-<sku>`) is unique to that customer + product, so the link opens a pre-filled
-order. Returns empty + a signal if the SKU is missing (never fabricates one). **Used by:** Consumer, Campaign.
+- **What:** builds two links deterministically from the SKU.
+- **Product page:** `…/p/<sku-slug>`.
+- **Unique order link:** `…/order/<question_id>-<sku-slug>?email=<urlencoded>&utm_…` — the reference `<question_id>-<sku>` is unique per customer + product, so it opens a pre-filled order.
+- **Safety:** returns empty + a signal if the SKU is missing (never fabricates one).
+- **Used by:** Consumer, Campaign.
 
 ### `fitshark-upsell-recommender`
-Given the matched product + the customer's vehicle, proposes **1–3 genuinely relevant** companion parts
-(category cross-sell map: bulb→pair/wipers, battery→terminals/charger, brakes→discs/fluid, …) and at most
-one premium **trade-up**. Every suggestion must fit the same vehicle (or be Universal) and have a real
-catalog price; returns "(none)" rather than padding. Raises average order value without being pushy.
-**Used by:** Consumer (and Campaign for enrichment). *(In the queue build the producer pre-selects the
-upsell items and the consumer renders them.)*
+- **What:** proposes relevant add-ons to raise order value without being pushy.
+- **How:** **1–3** companion parts via a category cross-sell map (bulb→pair/wipers, battery→terminals/charger, brakes→discs/fluid, …) + at most one premium **trade-up**.
+- **Guardrails:** every suggestion must fit the same vehicle (or be Universal) and have a real catalog price; returns "(none)" rather than padding.
+- **Used by:** Consumer (and Campaign for enrichment). *In the queue build the producer pre-selects the items and the consumer just renders them.*
 
 ### `fitshark-quote-pdf`
-Generates a one-page branded **PDF price quote** (FITSHARK header, quote ref = question_id, bill-to,
-line-item table with Qty / unit price incl. VAT / line total, grand total, valid-until date, order link)
-in the sandbox via Python, and attaches it to the email. Prices must match the matched catalog row.
-Degrades gracefully: if no PDF library/attachment is available it falls back to an inline quote and
-**never blocks the send**. **Used by:** Consumer.
+- **What:** generates a one-page branded **PDF price quote** and attaches it to the email.
+- **Contains:** FITSHARK header, quote ref = question_id, bill-to, line-item table (Qty / unit price incl. VAT / line total), grand total, valid-until date, order link.
+- **How:** built in the sandbox via Python; prices must match the matched catalog row.
+- **Resilient:** if no PDF library/attachment is available it falls back to an inline quote and **never blocks the send**.
+- **Used by:** Consumer.
 
 ### `fitshark-offer-personalizer`
-The campaign brain. Given a saved customer + vehicle (from the Customer Vehicles sheet) and the current
-season, it picks **2–4 fitting, well-timed parts** to offer next (seasonal logic — winter→battery/tyres,
-plus service items due by vehicle age), avoids re-offering the last item, respects opt-out, and returns a
-themed offer with rationale. Powers the later "we have something for your car" re-engagement campaigns.
-**Used by:** Campaign.
+- **What:** the campaign brain — turns a saved customer + vehicle into the next relevant offer.
+- **How:** given the Customer Vehicles row + current season, picks **2–4** fitting, well-timed parts (seasonal logic — winter→battery/tyres, plus service items due by vehicle age).
+- **Guardrails:** avoids re-offering the last item, respects opt-out, returns a themed offer with rationale.
+- **Used by:** Campaign (the "we have something for your car" re-engagement campaigns).
 
 ---
 
@@ -148,14 +141,14 @@ All agents use the `dominikfroncik@gmail.com` Google connections and Human-in-th
   - **Fitshark — Customer Vehicles** — one row per customer+vehicle (CRM for the campaign agent).
   - **Fitshark — Campaign Log** — personalized offers sent (campaign agent).
 - **Gmail** — sends the reply (from `dominikfroncik@gmail.com`); recipient is the `customer_email` on each row (test data = `dominik@fronc.eu`).
-- **Human-in-the-Loop** — every email (reply and follow-up) is approved in the Activity Inbox before sending.
+- **Human-in-the-Loop** — every email (reply and follow-up) is approved in the Activity Inbox before sending. `request_approval` is asynchronous: the consumer stops after requesting approval and waits to be re-invoked, then sends only on approval (never auto-sends).
 
 ---
 
 ## 6. Key behaviours
 
-- **Hands-free**: agents create the sheets they need and never ask the operator to set anything up; the catalog is searched directly in the Drive feeds via `grep` in the sandbox.
-- **Dedup / growing CSV**: each inquiry becomes a case exactly once; new questions added to the CSV become new cases.
+- **Hands-free**: agents create the sheets they need and never ask the operator to set anything up; product matching happens in the producer (grep over the Drive feeds in the sandbox).
+- **Dedup / growing CSV**: each inquiry becomes a case exactly once; new questions added to the CSV become new cases on the next hourly producer run.
 - **Confidence gate**: ambiguous matches are not guessed — they're flagged "Needs review" / failed rather than sent.
 - **Auto-language**: the reply is written in the customer's language.
 - **Upsell + fitment + PDF quote**: every reply can include relevant add-ons, a fitment-guarantee line, and an attached branded quote.
@@ -166,10 +159,9 @@ All agents use the `dominikfroncik@gmail.com` Google connections and Human-in-th
 ## 7. Known limitations
 
 - **Email rendering:** the reply is sent as the branded **HTML template** (FITSHARK card, status badge,
-  "Order this part" button, upsell, footer) by placing the HTML in the Gmail send `body`, which the
-  connector renders. A branded **PDF quote** is also attached. (Plain text is kept only as an internal
-  fallback.) The same HTML template is used for both in-stock and out-of-stock replies — only the badge
-  and the price/delivery values change.
+  "Order this part" button, upsell, footer) by calling the Gmail send tool with `isHtml: true`. A branded
+  **PDF quote** is also attached. The same HTML template is used for both in-stock and out-of-stock
+  replies — only the badge and the price/delivery values change.
 - **Order links** point at the demo storefront `shop.fitshark.example` — swap the base URL for a real shop to make them live.
 - The Google **Drive connector is read-only** (download + list; no upload) — files are edited locally and re-uploaded manually.
 
@@ -177,7 +169,8 @@ All agents use the `dominikfroncik@gmail.com` Google connections and Human-in-th
 
 ## 8. Operate it
 
-- **Seed the queue** from the questions (one case per inquiry): `duvo cases create --queue <id> --from-file cases.json`.
+- **Seed the queue** from the questions (one case per inquiry): `duvo cases create --queue <id> --from-file cases.json`
+  (or let the hourly producer enqueue new inquiries automatically). Build the pre-matched cases with `python3 duvo/build_cases.py`.
 - The consumer's case trigger then dispatches up to 10 jobs in parallel; approve each reply in the
   **Activity Inbox** (or Slack/Teams if enabled).
 - Regenerate the slim catalog: `python3 duvo/prepare_duvo_data.py`.
