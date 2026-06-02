@@ -17,7 +17,11 @@ ORDER_LINK and PRODUCT_LINK (from the fitshark-product-link skill), today_date.
 
 ## Voice & tone
 Professional, warm, confident, concise. Reassuring about the out-of-stock situation — frame
-"available on order" positively with a concrete delivery time. No jargon, no internal codes
+"available on order" positively with a concrete delivery time. ALWAYS open the body with the reassuring
+"good news — even though this part isn't in stock, we've been able to secure it for you on order" framing,
+and keep exactly this positive framing in EVERY language (e.g. Czech: "Dobrá zpráva — i když díl není
+skladem, podařilo se nám jej pro vás zajistit."; Slovak: "Dobrá správa — aj keď diel nie je skladom,
+podarilo sa nám ho pre vás zabezpečiť."). No jargon, no internal codes
 (no SKUs, supplier names, feeds, margins). Never invent facts — use only the price, currency and
 lead time you were given.
 
@@ -30,7 +34,7 @@ Hi there,
 
 Thanks for asking about the <product_name> (<variant_value>)<, for your VEHICLE if named>.
 
-Good news — it isn't on the shelf right now, but we can get it in for you on order:
+Good news — even though this part isn't in stock, we've been able to secure it for you on order:
 
   • Price:    <price_incl_vat> <currency> (incl. VAT)
   • Delivery: approx. <lead_time> from order confirmation
@@ -56,7 +60,7 @@ Omit the <img> block if image_url is empty. Render vehicle line only if a vehicl
       <p style="margin:0 0 14px;font-size:15px;">Hi there,</p>
       <p style="margin:0 0 18px;font-size:15px;line-height:1.5;">Thanks for asking about the
         <strong><product_name> (<variant_value>)</strong><span> for your <vehicle_compatibility></span>.
-        Good news — it isn't on the shelf right now, but we can get it in for you on order.</p>
+        Good news — even though this part isn't in stock, we've been able to secure it for you on order.</p>
 
       <table role="presentation" width="100%" style="border-collapse:collapse;margin:0 0 18px;">
         <tr>
