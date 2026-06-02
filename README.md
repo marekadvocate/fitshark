@@ -58,6 +58,28 @@ discount, sale price, unit price, core deposit) · stock & logistics · physical
 structured vehicle fitment (make, model, generation, years) · automotive (standards, HS customs code,
 country of origin, condition new/remanufactured) · tire EU label · oil standards · media and meta.
 
+## Customer questions (`questions/customer_questions.csv`)
+
+100 realistic English customer inquiries about **out-of-stock products**, evenly distributed across
+all 11 feeds (~9-10 each). Each question is built from a real feed row where `availability` is
+`On order` / `Incoming` and `stock_qty = 0`, so a matching product always exists and a real price +
+delivery time is available.
+
+Intended as input for an agent that searches the questions, recommends a matching product from the
+feeds, and replies with **price + delivery time**.
+
+| Column | Purpose |
+|---|---|
+| `question_id` | Q001–Q100 |
+| `customer_question` | the natural-language inquiry (agent input) |
+| `expected_*` | ground-truth match (supplier, feed file, sku, product name, brand, category, vehicle, variant) |
+| `availability`, `expected_lead_time`, `expected_price_incl_vat`, `currency` | reference answer for validating the agent |
+
+Every question maps to a real SKU (verified: 0 unmatched, 0 in-stock, 100% ASCII). The `expected_*`
+columns are the test oracle — hide/remove them if you want a blank test set.
+
+Regenerate with `python3 scripts/make_questions.py` (run from the feeds directory).
+
 ## Paste into Google Sheets
 
 1. Open `feeds/feed_<prefix>.tsv` → **Cmd/Ctrl+A → Cmd/Ctrl+C**
